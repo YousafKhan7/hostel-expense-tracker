@@ -22,7 +22,7 @@ export default function DashboardPage() {
 
     const q = query(
       collection(db, 'groups'),
-      where('members', 'array-contains', user.uid)
+      where('memberIds', 'array-contains', user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -45,11 +45,19 @@ export default function DashboardPage() {
     }
 
     try {
+      const now = new Date();
       const groupRef = await addDoc(collection(db, 'groups'), {
         name: newGroupName.trim(),
-        members: [user.uid],
-        createdAt: new Date(),
-        createdBy: user.uid
+        members: {
+          [user.uid]: {
+            role: 'admin',
+            joinedAt: now
+          }
+        },
+        memberIds: [user.uid],
+        createdAt: now,
+        createdBy: user.uid,
+        updatedAt: now
       });
       
       setIsCreateModalOpen(false);
@@ -126,8 +134,13 @@ export default function DashboardPage() {
                       {group.name}
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      {group.members.length} members
+                      {group.memberIds?.length || 0} members
                     </p>
+                    {group.members[user.uid]?.role === 'admin' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 mt-2">
+                        Admin
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

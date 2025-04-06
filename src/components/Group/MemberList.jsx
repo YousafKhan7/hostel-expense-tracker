@@ -3,7 +3,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../services/firebaseConfig';
 import { useAuth } from '../../contexts/AuthContext';
 
-export default function MemberList({ members, groupCreator }) {
+export default function MemberList({ group }) {
   const [memberProfiles, setMemberProfiles] = useState({});
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -12,12 +12,14 @@ export default function MemberList({ members, groupCreator }) {
     const fetchMemberProfiles = async () => {
       try {
         const profiles = {};
-        for (const memberId of members) {
+        // Get all member IDs except current user
+        const memberIds = Object.keys(group.members).filter(id => id !== user.uid);
+        
+        for (const memberId of memberIds) {
           const userDoc = await getDoc(doc(db, 'users', memberId));
           if (userDoc.exists()) {
             profiles[memberId] = userDoc.data();
           } else {
-            // If no profile exists, use email from auth
             profiles[memberId] = { 
               name: 'Unknown User',
               email: 'No email available'
@@ -32,16 +34,21 @@ export default function MemberList({ members, groupCreator }) {
       }
     };
 
-    if (members.length > 0) {
+    if (group?.members) {
       fetchMemberProfiles();
     }
-  }, [members]);
+  }, [group?.members, user.uid]);
+
+  const formatDate = (date) => {
+    if (!date) return '';
+    return new Date(date.toDate()).toLocaleDateString();
+  };
 
   if (loading) {
     return (
       <div className="animate-pulse">
         <div className="space-y-3">
-          {[...Array(members.length)].map((_, i) => (
+          {[...Array(Object.keys(group?.members || {}).length - 1)].map((_, i) => (
             <div key={i} className="h-12 bg-gray-200 rounded"></div>
           ))}
         </div>
@@ -49,15 +56,23 @@ export default function MemberList({ members, groupCreator }) {
     );
   }
 
+  // Get other members (excluding current user)
+  const otherMembers = Object.entries(group.members)
+    .filter(([memberId]) => memberId !== user.uid);
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium text-gray-900">Group Members</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium text-gray-900">Other Members</h3>
+        <span className="text-sm text-gray-500">
+          {otherMembers.length} {otherMembers.length === 1 ? 'member' : 'members'}
+        </span>
+      </div>
+      
       <ul className="divide-y divide-gray-200 bg-white shadow rounded-lg">
-        {members.map((memberId) => {
+        {otherMembers.map(([memberId, memberData]) => {
           const profile = memberProfiles[memberId] || {};
-          const isCreator = memberId === groupCreator;
-          const isCurrentUser = memberId === user.uid;
-          const displayName = isCurrentUser ? 'You' : (profile.name || 'Unknown User');
+          const isAdmin = memberData.role === 'admin';
 
           return (
             <li
@@ -74,18 +89,34 @@ export default function MemberList({ members, groupCreator }) {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {displayName}
+                    {profile.name || 'Unknown User'}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {profile.email}
+                    {profile.email || 'No email available'}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Joined {formatDate(memberData.joinedAt)}
                   </p>
                 </div>
               </div>
-              {isCreator && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                  Admin
-                </span>
-              )}
+              <div className="flex items-center space-x-2">
+                {isAdmin && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                    Admin
+                  </span>
+                )}
+                {group.createdBy === user.uid && (
+                  <button
+                    className="text-red-600 hover:text-red-800 text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Remove member functionality will be added here
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
             </li>
           );
         })}

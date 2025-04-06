@@ -158,7 +158,19 @@ export default function GroupPage() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{group?.name}</h1>
-              <p className="text-gray-500 mt-1">{group?.members.length} members</p>
+              <div className="flex items-center space-x-2 mt-1">
+                <p className="text-gray-500">
+                  {Object.keys(group?.members || {}).length} members
+                </p>
+                <span className="text-gray-400">•</span>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  group?.members[user.uid]?.role === 'admin'
+                    ? 'bg-primary-100 text-primary-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {group?.members[user.uid]?.role === 'admin' ? 'Admin' : 'Member'}
+                </span>
+              </div>
             </div>
             <div className="flex space-x-4">
               <button
@@ -237,10 +249,7 @@ export default function GroupPage() {
 
             {/* Members Section - 1/3 width on large screens */}
             <div className="lg:col-span-1">
-              <MemberList 
-                members={group?.members || []} 
-                groupCreator={group?.createdBy}
-              />
+              <MemberList group={group} />
             </div>
           </div>
 

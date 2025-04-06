@@ -32,14 +32,20 @@ export default function JoinGroup() {
 
       // Check if user is already a member
       const groupData = groupDoc.data();
-      if (groupData.members.includes(user.uid)) {
+      if (groupData.members[user.uid]) {
         setError('You are already a member of this group');
         return;
       }
 
-      // Add user to group members
+      const now = new Date();
+      // Add user to group members with role and join date
       await updateDoc(doc(db, 'groups', inviteCode), {
-        members: arrayUnion(user.uid)
+        [`members.${user.uid}`]: {
+          role: 'member',
+          joinedAt: now
+        },
+        memberIds: arrayUnion(user.uid),
+        updatedAt: now
       });
 
       // Navigate to the group page
