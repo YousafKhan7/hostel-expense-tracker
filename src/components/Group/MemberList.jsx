@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../services/firebaseConfig';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function MemberList({ group }) {
   const [memberProfiles, setMemberProfiles] = useState({});
   const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -42,6 +43,28 @@ export default function MemberList({ group }) {
   const formatDate = (date) => {
     if (!date) return '';
     return new Date(date.toDate()).toLocaleDateString();
+  };
+
+  const handleRemoveMember = async (memberId) => {
+    if (!group || removing) return;
+    
+    try {
+      setRemoving(memberId);
+      
+      // Create new members object without the removed member
+      const updatedMembers = { ...group.members };
+      delete updatedMembers[memberId];
+
+      // Update the group document
+      await updateDoc(doc(db, 'groups', group.id), {
+        members: updatedMembers,
+        memberIds: Object.keys(updatedMembers)
+      });
+    } catch (error) {
+      console.error('Error removing member:', error);
+    } finally {
+      setRemoving(null);
+    }
   };
 
   if (loading) {
@@ -112,15 +135,18 @@ export default function MemberList({ group }) {
                   </p>
                 </div>
               </div>
-              {group.createdBy === user.uid && (
+              {group.createdBy === user.uid && memberId !== group.createdBy && (
                 <button
-                  className="text-red-600 hover:text-red-800 text-sm"
+                  className={`text-red-600 hover:text-red-800 text-sm ${
+                    removing === memberId ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Remove member functionality will be added here
+                    handleRemoveMember(memberId);
                   }}
+                  disabled={removing === memberId}
                 >
-                  Remove
+                  {removing === memberId ? 'Removing...' : 'Remove'}
                 </button>
               )}
             </li>

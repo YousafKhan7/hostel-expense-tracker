@@ -8,19 +8,23 @@
 - ✅ Basic Group Management
 - ✅ Basic Expense Splitting Model
 - ✅ Enhanced Expense Display
+- ✅ Member Management System
+  - User profiles
+  - Role management
+  - Member removal
+  - Join dates
 
 ## In Progress
 ### Phase 1: Expense Splitting
 - ✅ Enhanced expense data model
 - ✅ Basic split implementation (equal splits)
 - ✅ Basic expense display with split info
-- 🔄 Implementing member selection UI
-- 📝 Planning balance calculations
+- 🔄 Implementing split member selection
+- 📝 Planning split type selection
 
 ## Upcoming
-- Split member selection UI
+- Split amount validation
 - Balance Calculation
-- Member Management
 - Payment Recording
 - Settlement System
 
@@ -30,11 +34,13 @@
 - Add form validation for split selections
 - Improve split UI/UX feedback
 - Add split amount validation
+- Add confirmation dialogs for member removal
 
 ## Testing Status
 - ✅ Authentication Flow
 - ✅ Group Creation
 - ✅ Basic Expense Management
+- ✅ Member Management
 - ⏳ Split Functionality
 - ❌ Balance Calculation
 - ❌ Settlement System
@@ -45,11 +51,11 @@
 - Production Deploy: ⏳ Pending
 
 ## Known Issues
-1. No member selection in expense split
-2. Missing split details in expense display
-3. Need better error messaging for split validation
+1. Split member selection pending
+2. Split type selection needed
+3. Split amount validation required
 
 ## Next Actions
-1. Add member selection UI for splits
-2. Implement split type selection
-3. Add balance calculations 
+1. Implement split member selection UI
+2. Add split type options
+3. Add split amount validation 

@@ -9,7 +9,7 @@
   - [x] Display user information in member list
 - [x] Enhance member management
   - [x] Add member role management (admin/member)
-  - [ ] Allow removing members (UI added, functionality pending)
+  - [x] Allow removing members
   - [x] Show member join dates
 
 ### Step 2: Group Member Management
@@ -18,17 +18,18 @@
   - [x] Create join group functionality
   - [x] Add member display with emails/names
   - [x] Add member role management (admin/member)
-- [ ] Add member management UI
+- [x] Add member management UI
   - [x] Show current members list
-  - [ ] Allow removing members
+  - [x] Allow removing members
   - [x] Show member join dates
 
-### Step 3: Enhance Expense Functionality
+### Step 3: Enhance Expense Functionality (Current Focus)
 - [x] Update expense data model
 - [x] Update Firestore expense document
 - [x] Enhance expense display
-- [ ] Add split member selection (after member management)
+- [ ] Add split member selection
 - [ ] Add split type selection
+- [ ] Implement split amount validation
 
 ### Step 4: Balance Calculation
 - [ ] Implement balance calculation logic
@@ -58,4 +59,4 @@
 - [ ] Implement settlement verification
 
 ## Current Focus
-Currently working on: Phase 1, Step 1 - Enhancing Expense Display 
+Currently working on: Phase 1, Step 3 - Enhancing Expense Functionality 
