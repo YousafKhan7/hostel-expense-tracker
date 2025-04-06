@@ -186,4 +186,28 @@
      - Filter expenses by selected category
    - Added dedicated Categories tab in GroupPage:
      - Tab-based interface for group features
-     - Separated expenses, categories, and reports 
+     - Separated expenses, categories, and reports
+
+6. Enhanced User Profile and Settings:
+   - Added application-wide Header component with:
+     - App navigation
+     - User profile menu
+     - Logout functionality
+   - Fixed notification settings issues:
+     - Corrected authentication state access
+     - Properly handled user session state
+     - Improved error handling for unauthenticated users
+   - Implemented Profile Settings:
+     - Display name update functionality
+     - User profile management
+     - Firestore profile synchronization
+   - Added Account Settings:
+     - Email address update
+     - Password change functionality
+     - Secure reauthentication flow
+     - Proper validation and error handling
+   - Improved user experience:
+     - Success/error feedback
+     - Form validation
+     - Security best practices
+     - Consistent UI styling 

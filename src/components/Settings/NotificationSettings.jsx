@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
  * Component for managing user notification settings
  */
 export default function NotificationSettings() {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -28,12 +28,13 @@ export default function NotificationSettings() {
         setLoading(true);
         setError('');
 
-        if (!currentUser) {
+        if (!user) {
+          setError('You must be logged in to view settings.');
           setLoading(false);
           return;
         }
 
-        const userSettings = await getUserNotificationSettings(currentUser.uid);
+        const userSettings = await getUserNotificationSettings(user.uid);
         setSettings({
           notifications: {
             ...userSettings.notifications
@@ -50,7 +51,7 @@ export default function NotificationSettings() {
     }
 
     fetchSettings();
-  }, [currentUser]);
+  }, [user]);
 
   // Handle notification toggle changes
   const handleNotificationToggle = (notificationType) => {
@@ -78,13 +79,13 @@ export default function NotificationSettings() {
       setError('');
       setSuccess('');
 
-      if (!currentUser) {
+      if (!user) {
         setError('You must be logged in to save settings.');
         setSaving(false);
         return;
       }
 
-      await updateUserNotificationSettings(currentUser.uid, settings);
+      await updateUserNotificationSettings(user.uid, settings);
       
       setSuccess('Notification settings saved successfully!');
       setSaving(false);
@@ -109,6 +110,20 @@ export default function NotificationSettings() {
           <div className="h-8 bg-gray-200 rounded"></div>
           <div className="h-8 bg-gray-200 rounded"></div>
           <div className="h-8 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case where user is not logged in
+  if (!user) {
+    return (
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="text-center py-6">
+          <div className="text-red-600 mb-2">You must be logged in to view notification settings.</div>
+          <a href="/login" className="text-primary-600 hover:text-primary-800">
+            Login to continue
+          </a>
         </div>
       </div>
     );

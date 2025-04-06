@@ -26,6 +26,12 @@ Step 2.9 - Monthly Report Generation & Notifications
    - ✓ Expense filtering
    - ✓ Category statistics
 
+4. ✓ Enhance user profile management
+   - ✓ Header with user menu
+   - ✓ Logout functionality 
+   - ✓ Profile settings
+   - ✓ Account management
+
 ## Active Components
 - ✓ MonthlyReport.jsx (New component)
   - ✓ Report generation
@@ -39,8 +45,8 @@ Step 2.9 - Monthly Report Generation & Notifications
 
 - ✓ UserSettingsPage.jsx (New component)
   - ✓ Notification settings
-  - [ ] Profile settings
-  - [ ] Account settings
+  - ✓ Profile settings
+  - ✓ Account settings
 
 - ✓ CategoryManager.jsx (New component)
   - ✓ Category CRUD
@@ -56,6 +62,11 @@ Step 2.9 - Monthly Report Generation & Notifications
   - ✓ Filter expenses by category
   - ✓ Clear filters
   - ✓ Category chip display
+
+- ✓ Header.jsx (New component)
+  - ✓ App navigation
+  - ✓ User profile menu
+  - ✓ Logout functionality
 
 ## Technical Considerations
 1. ✓ Report Generation

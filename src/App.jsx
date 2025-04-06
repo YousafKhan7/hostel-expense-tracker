@@ -1,5 +1,7 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
+import { useAuth } from './contexts/AuthContext'
+import Header from './components/Common/Header'
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -17,8 +19,15 @@ const Loading = () => (
 )
 
 function App() {
+  const { user } = useAuth();
+  const location = useLocation();
+  
+  // Don't show header on login and signup pages
+  const isAuthPage = ['/login', '/signup'].includes(location.pathname);
+  
   return (
     <Suspense fallback={<Loading />}>
+      {user && !isAuthPage && <Header />}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />

@@ -1,13 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import NotificationSettings from '../components/Settings/NotificationSettings';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../services/firebaseConfig';
+import { updateProfile, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 
 /**
  * User settings page component
  */
 export default function UserSettingsPage() {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('notifications');
+  
+  // Profile settings state
+  const [displayName, setDisplayName] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+
+  // Account settings state
+  const [newEmail, setNewEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountError, setAccountError] = useState('');
+  const [accountSuccess, setAccountSuccess] = useState('');
+
+  // Load user data
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.displayName || '');
+      setNewEmail(user.email || '');
+    }
+  }, [user]);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   // Define available tabs
   const tabs = [
@@ -19,6 +54,149 @@ export default function UserSettingsPage() {
   // Switch between tabs
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
+  };
+
+  // Update profile
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    setProfileError('');
+    setProfileSuccess('');
+
+    try {
+      // Update display name in Firebase Auth
+      await updateProfile(user, { displayName });
+      
+      // Update display name in Firestore
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, { name: displayName });
+      
+      setProfileSuccess('Profile updated successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setProfileSuccess('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setProfileError('Failed to update profile. Please try again.');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Update email
+  const handleUpdateEmail = async (e) => {
+    e.preventDefault();
+    setAccountLoading(true);
+    setAccountError('');
+    setAccountSuccess('');
+
+    try {
+      if (!currentPassword) {
+        setAccountError('Please enter your current password to update email.');
+        setAccountLoading(false);
+        return;
+      }
+
+      if (!newEmail) {
+        setAccountError('Please enter a new email address.');
+        setAccountLoading(false);
+        return;
+      }
+
+      // Reauthenticate user
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      
+      // Update email
+      await updateEmail(user, newEmail);
+      
+      // Update email in Firestore
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, { email: newEmail });
+      
+      setAccountSuccess('Email updated successfully!');
+      setCurrentPassword('');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setAccountSuccess('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error updating email:', error);
+      if (error.code === 'auth/wrong-password') {
+        setAccountError('Incorrect password. Please try again.');
+      } else if (error.code === 'auth/email-already-in-use') {
+        setAccountError('Email already in use by another account.');
+      } else if (error.code === 'auth/invalid-email') {
+        setAccountError('Invalid email format.');
+      } else {
+        setAccountError('Failed to update email. Please try again.');
+      }
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
+  // Update password
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    setAccountLoading(true);
+    setAccountError('');
+    setAccountSuccess('');
+
+    try {
+      if (!currentPassword) {
+        setAccountError('Please enter your current password.');
+        setAccountLoading(false);
+        return;
+      }
+
+      if (!newPassword) {
+        setAccountError('Please enter a new password.');
+        setAccountLoading(false);
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        setAccountError('New passwords do not match.');
+        setAccountLoading(false);
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        setAccountError('Password should be at least 6 characters long.');
+        setAccountLoading(false);
+        return;
+      }
+
+      // Reauthenticate user
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      
+      // Update password
+      await updatePassword(user, newPassword);
+      
+      setAccountSuccess('Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setAccountSuccess('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error updating password:', error);
+      if (error.code === 'auth/wrong-password') {
+        setAccountError('Incorrect password. Please try again.');
+      } else {
+        setAccountError('Failed to update password. Please try again.');
+      }
+    } finally {
+      setAccountLoading(false);
+    }
   };
 
   return (
@@ -52,24 +230,24 @@ export default function UserSettingsPage() {
           <div className="flex flex-col items-center">
             <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
               <span className="text-3xl text-indigo-600">
-                {currentUser?.displayName?.charAt(0) || currentUser?.email?.charAt(0)?.toUpperCase() || '?'}
+                {user?.displayName?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || '?'}
               </span>
             </div>
             
             <h2 className="text-lg font-medium text-gray-900 mb-1">
-              {currentUser?.displayName || 'User'}
+              {user?.displayName || 'User'}
             </h2>
             
             <p className="text-sm text-gray-500">
-              {currentUser?.email || 'No email provided'}
+              {user?.email || 'No email provided'}
             </p>
             
             <div className="mt-4 w-full">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-gray-500">Member Since</span>
                 <span className="font-medium">
-                  {currentUser?.metadata?.creationTime 
-                    ? new Date(currentUser.metadata.creationTime).toLocaleDateString() 
+                  {user?.metadata?.creationTime 
+                    ? new Date(user.metadata.creationTime).toLocaleDateString() 
                     : 'Unknown'}
                 </span>
               </div>
@@ -77,8 +255,8 @@ export default function UserSettingsPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Last Login</span>
                 <span className="font-medium">
-                  {currentUser?.metadata?.lastSignInTime 
-                    ? new Date(currentUser.metadata.lastSignInTime).toLocaleDateString() 
+                  {user?.metadata?.lastSignInTime 
+                    ? new Date(user.metadata.lastSignInTime).toLocaleDateString() 
                     : 'Unknown'}
                 </span>
               </div>
@@ -96,9 +274,47 @@ export default function UserSettingsPage() {
               <p className="text-sm text-gray-500 mt-1 mb-4">
                 Update your profile information
               </p>
-              <div className="text-center py-8 text-gray-400">
-                Profile settings coming soon
-              </div>
+              
+              {profileError && (
+                <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
+                  {profileError}
+                </div>
+              )}
+
+              {profileSuccess && (
+                <div className="mb-4 text-sm text-green-600 bg-green-50 p-2 rounded">
+                  {profileSuccess}
+                </div>
+              )}
+              
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div>
+                  <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+                    Display Name
+                  </label>
+                  <input
+                    type="text"
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    placeholder="Enter your display name"
+                  />
+                </div>
+                
+                <div>
+                  <button
+                    type="submit"
+                    disabled={profileLoading}
+                    className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                    ${profileLoading
+                      ? 'bg-indigo-300 cursor-not-allowed' 
+                      : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
+                  >
+                    {profileLoading ? 'Updating...' : 'Update Profile'}
+                  </button>
+                </div>
+              </form>
             </div>
           )}
           
@@ -108,8 +324,127 @@ export default function UserSettingsPage() {
               <p className="text-sm text-gray-500 mt-1 mb-4">
                 Manage your account preferences
               </p>
-              <div className="text-center py-8 text-gray-400">
-                Account settings coming soon
+              
+              {accountError && (
+                <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
+                  {accountError}
+                </div>
+              )}
+
+              {accountSuccess && (
+                <div className="mb-4 text-sm text-green-600 bg-green-50 p-2 rounded">
+                  {accountSuccess}
+                </div>
+              )}
+              
+              <div className="space-y-6">
+                {/* Email update section */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-2">Email Address</h4>
+                  <form onSubmit={handleUpdateEmail} className="space-y-3">
+                    <div>
+                      <label htmlFor="newEmail" className="block text-sm font-medium text-gray-700">
+                        New Email
+                      </label>
+                      <input
+                        type="email"
+                        id="newEmail"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Enter new email address"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="currentPasswordEmail" className="block text-sm font-medium text-gray-700">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        id="currentPasswordEmail"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Enter your current password"
+                      />
+                    </div>
+                    
+                    <div>
+                      <button
+                        type="submit"
+                        disabled={accountLoading}
+                        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                        ${accountLoading
+                          ? 'bg-indigo-300 cursor-not-allowed' 
+                          : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
+                      >
+                        {accountLoading ? 'Updating...' : 'Update Email'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+                
+                {/* Password update section */}
+                <div className="pt-4 border-t border-gray-200">
+                  <h4 className="text-md font-medium text-gray-900 mb-2">Password</h4>
+                  <form onSubmit={handleUpdatePassword} className="space-y-3">
+                    <div>
+                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        id="currentPassword"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Enter your current password"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        id="newPassword"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        id="confirmPassword"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                    
+                    <div>
+                      <button
+                        type="submit"
+                        disabled={accountLoading}
+                        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                        ${accountLoading
+                          ? 'bg-indigo-300 cursor-not-allowed' 
+                          : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
+                      >
+                        {accountLoading ? 'Updating...' : 'Update Password'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           )}

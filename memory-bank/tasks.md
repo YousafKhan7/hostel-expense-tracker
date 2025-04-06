@@ -7,6 +7,8 @@
 - [x] Display member information in groups
 - [x] Show member join dates
 - [x] Add member role management
+- [x] Allow profile settings and updates
+- [x] Implement account settings (email/password)
 - [ ] Allow removing members from groups
 
 ### Step 2: Expense Management
@@ -108,4 +110,12 @@
 - [x] Create notification options in user settings
 - [x] Design email templates
 - [ ] Implement scheduled notifications
-- [ ] Add immediate notifications for important events 
+- [ ] Add immediate notifications for important events
+
+#### User Profile Management
+- [x] Add user settings page
+- [x] Implement profile updates
+- [x] Add account settings
+- [x] Create authentication flow
+- [x] Add logout functionality
+- [x] Implement header with user menu 
