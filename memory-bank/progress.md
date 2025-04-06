@@ -50,6 +50,11 @@
       - [x] Notification preferences UI
       - [x] Email service implementation
       - [ ] Firebase Cloud Functions setup
+    - [x] Expense categories
+      - [x] Category management UI
+      - [x] Default categories
+      - [x] Category selection in expense form
+      - [x] Category filtering and display
     - [ ] Monthly totals export
 
 ## Upcoming
@@ -165,4 +170,20 @@
      - Toggle controls for different notification types
      - Email frequency settings (immediate, daily, weekly)
    - Created user settings page with notification management
-   - Added route to access settings from dashboard 
+   - Added route to access settings from dashboard
+
+5. Implemented Expense Categories:
+   - Created CategoryManager component for CRUD operations:
+     - Default category creation for new groups
+     - Category customization with colors and icons
+     - Category editing and deletion
+   - Added CategorySelector component for expense form:
+     - Integrated category selection in expense creation
+     - Visual display with icons and colors
+   - Implemented category filtering in expense lists:
+     - Created CategoryFilter component
+     - Added category display in expense items
+     - Filter expenses by selected category
+   - Added dedicated Categories tab in GroupPage:
+     - Tab-based interface for group features
+     - Separated expenses, categories, and reports 

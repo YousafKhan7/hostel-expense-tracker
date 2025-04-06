@@ -6,6 +6,7 @@ import { validateExpense, getMonthKey } from '../../utils/ExpenseSchema';
 import { updateMonthlyData, getMonthlyData } from '../../services/firestoreService';
 import SplitTypeSelector from './SplitTypeSelector';
 import CustomSplitInput from './CustomSplitInput';
+import CategorySelector from '../Category/CategorySelector';
 
 export default function ExpenseForm({ groupId, onSuccess }) {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export default function ExpenseForm({ groupId, onSuccess }) {
   const [splitType, setSplitType] = useState('equal');
   const [customShares, setCustomShares] = useState({});
   const [expenseDate, setExpenseDate] = useState(new Date());
+  const [categoryId, setCategoryId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [debug, setDebug] = useState('');
@@ -144,7 +146,8 @@ export default function ExpenseForm({ groupId, onSuccess }) {
         groupId,
         shares,
         splitType,
-        expenseDate: normalizedDate
+        expenseDate: normalizedDate,
+        category: categoryId
       });
 
       // Log validated expense data
@@ -227,14 +230,12 @@ Normalized: ${new Date().toISOString()}`);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
         <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-600">{error}</p>
+          <div className="text-sm text-red-700">{error}</div>
           {debug && (
-            <pre className="mt-2 text-xs text-gray-600 whitespace-pre-wrap">
-              {debug}
-            </pre>
+            <pre className="mt-2 text-xs text-red-500 overflow-auto">{debug}</pre>
           )}
         </div>
       )}
@@ -248,7 +249,8 @@ Normalized: ${new Date().toISOString()}`);
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="mt-1 input"
+          className="input mt-1"
+          placeholder="What's this expense for?"
           required
         />
       </div>
@@ -263,9 +265,8 @@ Normalized: ${new Date().toISOString()}`);
           </div>
           <input
             type="number"
-            id="amount"
-            min="0"
             step="0.01"
+            id="amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="input pl-7"
@@ -282,117 +283,85 @@ Normalized: ${new Date().toISOString()}`);
         <input
           type="date"
           id="expenseDate"
-          value={expenseDate instanceof Date && !isNaN(expenseDate.getTime())
-            ? expenseDate.toISOString().substring(0, 10)
-            : new Date().toISOString().substring(0, 10)}
+          value={expenseDate instanceof Date ? expenseDate.toISOString().split('T')[0] : ''}
           onChange={(e) => {
-            try {
-              // Parse the selected date and set time to noon
-              const dateValue = e.target.value;
-              console.log('Date input value:', dateValue);
-              
-              if (!dateValue) {
-                throw new Error('Empty date value');
-              }
-              
-              // Create date using the YYYY-MM-DD format directly
-              const [year, month, day] = dateValue.split('-').map(Number);
-              if (!year || !month || !day) {
-                throw new Error('Invalid date format');
-              }
-              
-              const selectedDate = new Date(year, month - 1, day, 12, 0, 0);
-              
-              if (isNaN(selectedDate.getTime())) {
-                throw new Error('Invalid date selected');
-              }
-              
-          
-              
-              setExpenseDate(selectedDate);
-            } catch (err) {
-              console.error('Error setting date:', err);
-              // Fall back to today's date on error
-              const today = new Date();
-              today.setHours(12, 0, 0, 0);
-              setExpenseDate(today);
-            }
+            // Create new date at noon to avoid timezone issues
+            const selectedDate = new Date(e.target.value);
+            selectedDate.setHours(12, 0, 0, 0);
+            setExpenseDate(selectedDate);
           }}
-          className="mt-1 input"
+          className="input mt-1"
           required
-          max={new Date().toISOString().substring(0, 10)}
         />
       </div>
 
       <div>
-        <SplitTypeSelector
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+          Category
+        </label>
+        <CategorySelector 
+          groupId={groupId}
+          selectedCategoryId={categoryId}
+          onChange={setCategoryId}
+        />
+      </div>
+
+      <div>
+        <span className="block text-sm font-medium text-gray-700 mb-1">
+          Split With
+        </span>
+        <div className="bg-gray-50 p-3 rounded-md">
+          <div className="flex flex-wrap gap-2">
+            {allMembers.map((memberId) => {
+              const profile = memberProfiles[memberId] || {};
+              const isCurrentUser = memberId === user.uid;
+              const isSelected = selectedMembers.includes(memberId);
+              
+              return (
+                <button
+                  key={memberId}
+                  type="button"
+                  className={`flex items-center px-3 py-1 rounded-full text-sm transition-colors ${
+                    isSelected 
+                      ? 'bg-primary-100 text-primary-800 border border-primary-300' 
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-transparent'
+                  }`}
+                  onClick={() => handleMemberToggle(memberId)}
+                >
+                  {profile.name || (isCurrentUser ? 'You' : 'Unknown')}
+                  {isCurrentUser && ' (you)'}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SplitTypeSelector 
           value={splitType}
           onChange={handleSplitTypeChange}
         />
       </div>
 
-      {loading ? (
-        <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-gray-200 rounded"></div>
-          <div className="h-10 bg-gray-200 rounded"></div>
-        </div>
-      ) : amount ? (
-        <div>
-          {splitType === 'equal' ? (
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-900">Split With</h4>
-              <div className="bg-white rounded-lg border border-gray-200">
-                <ul className="divide-y divide-gray-200">
-                  {allMembers.map(memberId => (
-                    <li key={memberId} className="px-4 py-3">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedMembers.includes(memberId)}
-                          onChange={() => handleMemberToggle(memberId)}
-                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-3"
-                        />
-                        <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                          <span className="text-sm font-medium text-primary-800">
-                            {(memberProfiles[memberId]?.name?.[0] || '?').toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">
-                            {memberId === user.uid ? 'You' : (memberProfiles[memberId]?.name || 'Unknown User')}
-                          </p>
-                          <p className="text-xs text-gray-500">{memberProfiles[memberId]?.email}</p>
-                        </div>
-                        {selectedMembers.includes(memberId) && (
-                          <div className="ml-auto text-sm text-gray-500">
-                            ${(parseFloat(amount) / selectedMembers.length).toFixed(2)}
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            <CustomSplitInput
-              members={memberProfiles}
-              totalAmount={parseFloat(amount)}
-              selectedMembers={selectedMembers}
-              onSplitChange={setCustomShares}
-              currentUserId={user.uid}
-            />
-          )}
-        </div>
-      ) : null}
+      {splitType === 'custom' && (
+        <CustomSplitInput
+          members={allMembers.filter(id => selectedMembers.includes(id))}
+          memberProfiles={memberProfiles}
+          totalAmount={parseFloat(amount) || 0}
+          shares={customShares}
+          onChange={setCustomShares}
+          currentUserId={user.uid}
+        />
+      )}
 
-      <div>
+      <div className="pt-4">
         <button
           type="submit"
-          className="w-full btn-primary"
-          disabled={loading || !description || !amount || selectedMembers.length === 0}
+          disabled={loading}
+          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
-          {loading ? 'Creating Expense...' : 'Create Expense'}
+          Add Expense
         </button>
       </div>
     </form>

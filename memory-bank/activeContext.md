@@ -20,11 +20,11 @@ Step 2.9 - Monthly Report Generation & Notifications
    - [ ] Notification templates
    - [ ] Delivery rules
 
-3. Add expense categories
-   - Category management
-   - Category-based reporting
-   - Expense filtering
-   - Category statistics
+3. ✓ Add expense categories
+   - ✓ Category management
+   - ✓ Category-based reporting
+   - ✓ Expense filtering
+   - ✓ Category statistics
 
 ## Active Components
 - ✓ MonthlyReport.jsx (New component)
@@ -37,15 +37,25 @@ Step 2.9 - Monthly Report Generation & Notifications
   - ✓ Notification types
   - ✓ Delivery frequency
 
-- UserSettingsPage.jsx (New component)
+- ✓ UserSettingsPage.jsx (New component)
   - ✓ Notification settings
   - [ ] Profile settings
   - [ ] Account settings
 
-- CategoryManager.jsx (New component)
-  - Category CRUD
-  - Category assignment
-  - Category stats
+- ✓ CategoryManager.jsx (New component)
+  - ✓ Category CRUD
+  - ✓ Category assignment
+  - ✓ Category stats
+
+- ✓ CategorySelector.jsx (New component)
+  - ✓ Category selection for expenses
+  - ✓ Visual icons and colors
+  - ✓ Default category fallback
+
+- ✓ CategoryFilter.jsx (New component)
+  - ✓ Filter expenses by category
+  - ✓ Clear filters
+  - ✓ Category chip display
 
 ## Technical Considerations
 1. ✓ Report Generation
@@ -61,11 +71,11 @@ Step 2.9 - Monthly Report Generation & Notifications
    - [ ] Delivery tracking
    - [ ] Error handling
 
-3. Category System
-   - Data structure
-   - UI/UX design
-   - Migration strategy
-   - Default categories
+3. ✓ Category System
+   - ✓ Data structure (Categories collection)
+   - ✓ UI/UX design (color-coded, icon-based)
+   - ✓ Default categories for new groups
+   - ✓ Integration with expense creation
 
 ## Implementation Phases
 1. Phase 1: Core Monthly System
@@ -102,6 +112,7 @@ Step 2.9 - Monthly Report Generation & Notifications
 - Date handling improvements implemented ✓
 - PDF report generation implemented ✓
 - Email notification system implemented ✓
+- Expense categories implemented ✓
 - Next: focus on Firebase Cloud Functions setup for email delivery
 
 ## Questions to Address
@@ -109,7 +120,7 @@ Step 2.9 - Monthly Report Generation & Notifications
 2. How to handle large reports?
 3. What email service to integrate?
 4. How to handle timezone differences in monthly transitions? ✓ (Using noon-based dates)
-5. What default categories to provide?
+5. ✓ What default categories to provide? (Created a set of 10 common categories)
 
 ## Next Steps
 1. ✓ Research and select PDF library

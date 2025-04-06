@@ -9,6 +9,7 @@ import ExpenseForm from '../components/Expense/ExpenseForm';
 import BalanceDisplay from '../components/Balance/BalanceDisplay';
 import ExpenseList from '../components/Expense/ExpenseList';
 import ExpenseCalendar from '../components/Expense/ExpenseCalendar';
+import CategoryManager from '../components/Category/CategoryManager';
 import { getMonthKey, getMonthBoundaries } from '../utils/ExpenseSchema';
 import { lazy, Suspense } from 'react';
 
@@ -35,6 +36,7 @@ export default function GroupPage() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(getMonthKey(new Date()));
+  const [activeTab, setActiveTab] = useState('expenses');
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
@@ -172,28 +174,84 @@ export default function GroupPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Calendar and Expenses */}
-            <div className="lg:col-span-2 space-y-6">
-              <ExpenseCalendar
-                groupId={groupId}
-                expenses={expenses}
-                onMonthChange={setSelectedMonth}
-              />
-              
-              <ExpenseList
-                expenses={expenses}
-                members={group?.members || {}}
-                groupId={groupId}
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 mb-6">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('expenses')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'expenses'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Expenses
+              </button>
+              <button
+                onClick={() => setActiveTab('categories')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'categories'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Categories
+              </button>
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'reports'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Reports
+              </button>
+            </nav>
+          </div>
+
+          {/* Expenses Tab */}
+          {activeTab === 'expenses' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Calendar and Expenses */}
+              <div className="lg:col-span-2 space-y-6">
+                <ExpenseCalendar
+                  groupId={groupId}
+                  expenses={expenses}
+                  onMonthChange={setSelectedMonth}
+                />
+                
+                <ExpenseList
+                  expenses={expenses}
+                  members={group?.members || {}}
+                  groupId={groupId}
+                />
+              </div>
+
+              {/* Right Column - Members and Balance */}
+              <div className="lg:col-span-1 space-y-6">
+                <MemberList group={group} />
+                <BalanceDisplay group={group} expenses={expenses} />
+              </div>
+            </div>
+          )}
+
+          {/* Categories Tab */}
+          {activeTab === 'categories' && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <CategoryManager 
+                groupId={groupId} 
+                onCategorySelect={(category) => {
+                  // Switch to expenses tab and filter by this category
+                  setActiveTab('expenses');
+                }}
               />
             </div>
+          )}
 
-            {/* Right Column - Members and Balance */}
-            <div className="lg:col-span-1 space-y-6">
-              <MemberList group={group} />
-              <BalanceDisplay group={group} expenses={expenses} />
-              
-              {/* Monthly Report Component */}
+          {/* Reports Tab */}
+          {activeTab === 'reports' && (
+            <div className="bg-white shadow rounded-lg p-6">
               <Suspense fallback={<ReportLoading />}>
                 <MonthlyReport
                   groupId={groupId}
@@ -201,17 +259,16 @@ export default function GroupPage() {
                   monthKey={selectedMonth}
                   expenses={expenses}
                   members={group?.members || {}}
-                  balances={{}} // This will be enhanced later
-                  settlements={[]} // This will be enhanced later
                 />
               </Suspense>
             </div>
-          </div>
+          )}
 
+          {/* Add Expense Modal */}
           <Modal
             isOpen={isAddExpenseModalOpen}
             onClose={() => setIsAddExpenseModalOpen(false)}
-            title="Add New Expense"
+            title="Add Expense"
           >
             <ExpenseForm
               groupId={groupId}
@@ -219,35 +276,38 @@ export default function GroupPage() {
             />
           </Modal>
 
+          {/* Invite Modal */}
           <Modal
             isOpen={isInviteModalOpen}
-            onClose={() => {
-              setIsInviteModalOpen(false);
-              setInviteCopied(false);
-            }}
+            onClose={() => setIsInviteModalOpen(false)}
             title="Share Group"
           >
             <div className="space-y-4">
               <p className="text-sm text-gray-500">
-                Share this code with others to invite them to the group:
+                Share this group code with others to invite them to your group.
               </p>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={groupId}
-                  className="input flex-grow bg-gray-50"
-                />
+              
+              <div className="flex rounded-md shadow-sm">
+                <div className="flex-grow relative">
+                  <input
+                    type="text"
+                    readOnly
+                    value={groupId}
+                    className="input block w-full pr-10 sm:text-sm"
+                    onClick={(e) => e.target.select()}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleCopyInvite}
-                  className="btn btn-secondary"
+                  className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                   {inviteCopied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
+              
               <p className="text-xs text-gray-500">
-                They can use this code on the Join Group page to become a member.
+                Others can join by going to the dashboard and clicking "Join Group".
               </p>
             </div>
           </Modal>

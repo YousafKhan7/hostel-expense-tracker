@@ -27,6 +27,12 @@ export function validateExpense(expenseData) {
   if (!groupId) throw new Error('Group ID is required');
   if (!shares || Object.keys(shares).length === 0) throw new Error('Shares information is required');
   
+  // Validate category
+  const validCategory = category && typeof category === 'string' && category.trim() !== '';
+  if (!validCategory) {
+    console.warn('No valid category provided, defaulting to "uncategorized"', { providedCategory: category });
+  }
+  
   // Validate date
   let parsedDate;
   try {
@@ -96,7 +102,7 @@ export function validateExpense(expenseData) {
     shares,
     splitType: splitType || 'equal',
     expenseDate: parsedDate,
-    category: category || 'uncategorized',
+    category: validCategory ? category.trim() : 'uncategorized',
     createdAt: new Date(),
     updatedAt: new Date(),
     month: monthKey,
@@ -235,6 +241,19 @@ export const userSettingsStructure = {
   },
   emailFrequency: 'immediate', // 'immediate' | 'daily' | 'weekly'
   timezone: null, // For future use
+  createdAt: null,
+  updatedAt: null
+};
+
+/**
+ * Structure for the Category collection
+ */
+export const categoryStructure = {
+  name: '',        // Category name
+  groupId: '',     // Group this category belongs to
+  color: '',       // Color for display
+  icon: '',        // Icon name
+  isDefault: false, // If this is a default category
   createdAt: null,
   updatedAt: null
 }; 

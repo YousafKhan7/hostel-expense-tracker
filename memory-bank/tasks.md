@@ -32,7 +32,7 @@
   - [x] Replace "Paid by you/other" with user details
   - [x] Clickable member count with share details
   - [x] Enhanced expense details view
-- [ ] Expense categories
+- [x] Expense categories
 - [ ] Expense attachments
 
 ### Step 3: Group Management
@@ -75,4 +75,37 @@
   - Date handling ✓
   - Balance transitions
   - Report generation
-  - Split functionality 
+  - Split functionality
+
+### Features
+
+#### Monthly Calendar System
+- [x] Create basic monthly view
+- [x] Display expenses per date
+- [x] Add month navigation
+- [x] Integrate with expense system
+- [x] Add summary statistics
+
+#### Report Generation
+- [x] Create monthly report layout
+- [x] Implement expense calculation logic
+- [x] Add PDF export functionality
+- [x] Design printer-friendly report
+- [ ] Implement report saving to Firebase storage
+
+#### Expense Categories
+- [x] Design category data structure
+- [x] Create category selection component
+- [x] Add category filtering
+- [x] Implement category management screen
+- [x] Update expense form with category
+- [x] Create initial set of default categories
+- [x] Add color-coding for categories
+- [x] Implement category-based statistics
+
+#### Email Notifications
+- [x] Set up email service
+- [x] Create notification options in user settings
+- [x] Design email templates
+- [ ] Implement scheduled notifications
+- [ ] Add immediate notifications for important events 
