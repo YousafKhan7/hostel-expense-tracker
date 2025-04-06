@@ -3,10 +3,12 @@
 ## Phase 1: Implementing Expense Splitting & Balance Calculation
 
 ### Step 1: Enhance Expense Functionality & Data Model
-- [ ] Update expense data model to include splitAmong field
-- [ ] Modify expense creation form to handle split information
-- [ ] Update Firestore expense document structure
-- [ ] Implement default split among all group members
+- [x] Update expense data model to include splitAmong field
+- [x] Update Firestore expense document structure
+- [x] Implement default split among all group members
+- [ ] Add split member selection UI
+- [ ] Add split type selection (for future custom splits)
+- [ ] Enhance expense display to show split details
 
 ### Step 2: Balance Calculation Logic
 - [ ] Implement balance calculation for group members
@@ -43,4 +45,4 @@
 - [ ] Implement settlement verification
 
 ## Current Focus
-Currently working on: Phase 1, Step 1 - Enhancing Expense Functionality 
+Currently working on: Phase 1, Step 1 - Enhancing Expense Display 

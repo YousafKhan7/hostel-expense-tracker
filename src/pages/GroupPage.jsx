@@ -14,7 +14,9 @@ export default function GroupPage() {
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
-    paidBy: ''
+    splitType: 'EQUAL',
+    splitAmong: [],
+    shares: {}
   });
   const [error, setError] = useState('');
   const { user } = useAuth();
@@ -30,7 +32,13 @@ export default function GroupPage() {
     const fetchGroup = async () => {
       const groupDoc = await getDoc(doc(db, 'groups', groupId));
       if (groupDoc.exists()) {
-        setGroup({ id: groupDoc.id, ...groupDoc.data() });
+        const groupData = { id: groupDoc.id, ...groupDoc.data() };
+        setGroup(groupData);
+        // Initialize splitAmong with all group members
+        setNewExpense(prev => ({
+          ...prev,
+          splitAmong: groupData.members
+        }));
       } else {
         navigate('/dashboard');
       }
@@ -70,14 +78,29 @@ export default function GroupPage() {
       return;
     }
 
+    if (newExpense.splitAmong.length === 0) {
+      setError('Please select at least one member to split with');
+      return;
+    }
+
     try {
+      // Calculate equal shares
+      const shareAmount = amount / newExpense.splitAmong.length;
+      const shares = {};
+      newExpense.splitAmong.forEach(memberId => {
+        shares[memberId] = shareAmount;
+      });
+
       await addDoc(collection(db, 'expenses'), {
         groupId,
         description: newExpense.description.trim(),
         amount,
         paidBy: user.uid,
-        splitAmong: group.members,
+        splitAmong: newExpense.splitAmong,
+        splitType: 'EQUAL',
+        shares,
         createdAt: new Date(),
+        updatedAt: new Date(),
         createdBy: user.uid
       });
 
@@ -85,11 +108,26 @@ export default function GroupPage() {
       setNewExpense({
         description: '',
         amount: '',
-        paidBy: ''
+        splitType: 'EQUAL',
+        splitAmong: group.members,
+        shares: {}
       });
     } catch (error) {
       setError('Failed to add expense. Please try again.');
     }
+  };
+
+  const formatMemberName = (memberId) => {
+    return memberId === user.uid ? 'you' : 'other'; // This will be enhanced later with actual names
+  };
+
+  const getSplitSummary = (expense) => {
+    if (!expense.splitAmong || expense.splitAmong.length === 0) return 'Not split';
+    
+    const totalMembers = expense.splitAmong.length;
+    const shareAmount = (expense.amount / totalMembers).toFixed(2);
+    
+    return `Split equally • $${shareAmount} each`;
   };
 
   if (loading) {
@@ -130,22 +168,33 @@ export default function GroupPage() {
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
               <ul className="divide-y divide-gray-200">
                 {expenses.map((expense) => (
-                  <li key={expense.id}>
+                  <li key={expense.id} className="hover:bg-gray-50">
                     <div className="px-4 py-4 sm:px-6">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-primary-600 truncate">
-                          {expense.description}
-                        </p>
-                        <div className="ml-2 flex-shrink-0 flex">
+                        <div className="flex flex-col">
+                          <p className="text-sm font-medium text-primary-600 truncate">
+                            {expense.description}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {getSplitSummary(expense)}
+                          </p>
+                        </div>
+                        <div className="ml-2 flex-shrink-0 flex flex-col items-end">
                           <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                             ${expense.amount.toFixed(2)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {expense.splitType}
                           </p>
                         </div>
                       </div>
                       <div className="mt-2 sm:flex sm:justify-between">
-                        <div className="sm:flex">
+                        <div className="sm:flex flex-col">
                           <p className="flex items-center text-sm text-gray-500">
-                            Paid by {expense.paidBy === user.uid ? 'you' : 'other'}
+                            Paid by {formatMemberName(expense.paidBy)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Split with {expense.splitAmong?.length || 0} members
                           </p>
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
@@ -169,7 +218,9 @@ export default function GroupPage() {
               setNewExpense({
                 description: '',
                 amount: '',
-                paidBy: ''
+                splitType: 'EQUAL',
+                splitAmong: group?.members || [],
+                shares: {}
               });
             }}
             title="Add New Expense"
@@ -209,6 +260,14 @@ export default function GroupPage() {
                     placeholder="0.00"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Split Among
+                  </label>
+                  <p className="text-sm text-gray-500 mb-2">
+                    Currently split equally among all members
+                  </p>
+                </div>
               </div>
               <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                 <button
@@ -226,7 +285,9 @@ export default function GroupPage() {
                     setNewExpense({
                       description: '',
                       amount: '',
-                      paidBy: ''
+                      splitType: 'EQUAL',
+                      splitAmong: group?.members || [],
+                      shares: {}
                     });
                   }}
                 >

@@ -2,36 +2,38 @@
 
 ## Current Phase: Phase 1 - Expense Splitting & Balance Calculation
 **Mode**: IMPLEMENT
-**Step**: 1 - Enhance Expense Functionality & Data Model
+**Step**: 1.2 - Enhance Expense Display & UI
 
 ### Current Objectives
-1. Update expense data model in Firestore
-2. Modify expense creation form
-3. Implement split calculation logic
+1. Enhance expense display to show split information
+2. Add member selection UI for splits
+3. Implement split type selection UI
 
 ### Active Components
 - GroupPage.jsx
 - Modal.jsx (for expense creation)
-- Firestore expense collection
+- Expense list display
 
 ### Technical Considerations
-- Firestore data structure updates
-- Real-time updates for expense splits
-- UI/UX for split selection
-- Data validation and error handling
+- UI/UX for split member selection
+- Split amount validation
+- Real-time updates for split information
+- Performance with larger member lists
 
 ### Next Steps
-1. Update Firestore expense schema
-2. Modify expense creation form
-3. Implement default split logic
-4. Test with multiple group members
+1. Update expense list to show split details
+2. Add member selection component
+3. Implement split type selector
+4. Add split validation
 
 ### Questions/Decisions
-- Should we allow custom split ratios in MVP?
-- How to handle decimal places in split calculations?
-- Should we show split details in the expense list?
+- How to display split information in the expense list?
+- Should we show individual shares in the main list or in a detail view?
+- How to handle uneven splits in the future?
+- Should we allow editing splits after creation?
 
 ### Resources
+- Tailwind UI components
 - Firebase Firestore documentation
-- React component library
+- React form handling patterns
 - Existing expense tracking logic 
