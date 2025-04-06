@@ -73,6 +73,7 @@ export default function MemberList({ group }) {
         {otherMembers.map(([memberId, memberData]) => {
           const profile = memberProfiles[memberId] || {};
           const isAdmin = memberData.role === 'admin';
+          const isCreator = group.createdBy === memberId;
 
           return (
             <li
@@ -88,9 +89,21 @@ export default function MemberList({ group }) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {profile.name || 'Unknown User'}
-                  </p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm font-medium text-gray-900">
+                      {profile.name || 'Unknown User'}
+                    </p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      isAdmin ? 'bg-primary-100 text-primary-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {isAdmin ? 'Admin' : 'Member'}
+                    </span>
+                    {isCreator && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Creator
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500">
                     {profile.email || 'No email available'}
                   </p>
@@ -99,24 +112,17 @@ export default function MemberList({ group }) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                {isAdmin && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                    Admin
-                  </span>
-                )}
-                {group.createdBy === user.uid && (
-                  <button
-                    className="text-red-600 hover:text-red-800 text-sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Remove member functionality will be added here
-                    }}
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
+              {group.createdBy === user.uid && (
+                <button
+                  className="text-red-600 hover:text-red-800 text-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Remove member functionality will be added here
+                  }}
+                >
+                  Remove
+                </button>
+              )}
             </li>
           );
         })}

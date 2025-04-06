@@ -249,7 +249,7 @@ export default function GroupPage() {
 
             {/* Members Section - 1/3 width on large screens */}
             <div className="lg:col-span-1">
-              <MemberList group={group} />
+d               <MemberList group={group} />
             </div>
           </div>
 
