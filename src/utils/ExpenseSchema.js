@@ -8,7 +8,6 @@
  * @throws {Error} - If validation fails
  */
 export function validateExpense(expenseData) {
-  console.log('Validating expense data:', expenseData);
 
   const {
     description,
@@ -29,40 +28,38 @@ export function validateExpense(expenseData) {
   if (!shares || Object.keys(shares).length === 0) throw new Error('Shares information is required');
   
   // Validate date
-  console.log('Validating expense date:', {
-    originalDate: expenseDate,
-    type: typeof expenseDate,
-    isDate: expenseDate instanceof Date
-  });
-
   let parsedDate;
-  if (expenseDate instanceof Date) {
-    parsedDate = new Date(expenseDate);
-  } else if (typeof expenseDate === 'string') {
-    // Create date at noon to avoid timezone issues
-    const [year, month, day] = expenseDate.split('-').map(Number);
-    parsedDate = new Date(year, month - 1, day, 12, 0, 0);
-  } else {
-    parsedDate = new Date();
-  }
+  try {
+    if (expenseDate instanceof Date) {
+      parsedDate = new Date(expenseDate);
+    } else if (typeof expenseDate === 'string') {
+      // Create date at noon to avoid timezone issues
+      const [year, month, day] = expenseDate.split('-').map(Number);
+      if (!year || !month || !day) {
+        throw new Error('Invalid date format');
+      }
+      parsedDate = new Date(year, month - 1, day, 12, 0, 0);
+    } else if (expenseDate && typeof expenseDate === 'object' && expenseDate.seconds) {
+      // Handle Firestore timestamp
+      parsedDate = new Date(expenseDate.seconds * 1000);
+    } else {
+      parsedDate = new Date();
+    }
 
-  console.log('Parsed date:', {
-    parsedDate,
-    time: parsedDate.getTime(),
-    isValid: !isNaN(parsedDate.getTime())
-  });
+    // Ensure valid date
+    if (isNaN(parsedDate.getTime())) {
+      throw new Error('Invalid date format');
+    }
 
-  if (isNaN(parsedDate.getTime())) {
-    console.error('Invalid date:', {
+    // Ensure proper time for consistent date comparison
+    parsedDate.setHours(12, 0, 0, 0);
+  } catch (err) {
+    console.error('Date parsing error:', {
       originalDate: expenseDate,
-      parsedDate,
-      error: 'Invalid date format'
+      error: err.message
     });
     throw new Error('Invalid date format. Please use YYYY-MM-DD');
   }
-
-  // Set time to noon to avoid timezone issues
-  parsedDate.setHours(12, 0, 0, 0);
 
   // Check if date is in the future
   const today = new Date();
@@ -88,12 +85,7 @@ export function validateExpense(expenseData) {
   }
 
   const monthKey = getMonthKey(parsedDate);
-  console.log('Generated month key:', {
-    date: parsedDate,
-    monthKey,
-    month: parsedDate.getMonth() + 1,
-    year: parsedDate.getFullYear()
-  });
+
 
   // Format the expense object
   const formattedExpense = {
@@ -112,7 +104,6 @@ export function validateExpense(expenseData) {
     settledAt: null
   };
 
-  console.log('Formatted expense:', formattedExpense);
   return formattedExpense;
 }
 
@@ -122,28 +113,73 @@ export function validateExpense(expenseData) {
  * @returns {string} - The month key in YYYY-MM format
  */
 export function getMonthKey(date) {
-  console.log('Generating month key for date:', date);
-  
-  let d;
-  if (date && typeof date === 'object') {
-    // Handle Firestore Timestamp
-    if (date.seconds !== undefined && date.nanoseconds !== undefined) {
-      d = new Date(date.seconds * 1000);
-    } else {
+  try {
+    let d;
+    
+ 
+    
+    if (!date) {
+      // Default to current date if no date provided
+      d = new Date();
+      console.warn('No date provided to getMonthKey, using current date');
+    } else if (typeof date === 'string') {
+      // Handle ISO string dates
+      // If it's a date string in YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        const [year, month, day] = date.split('-').map(Number);
+        d = new Date(year, month - 1, day, 12, 0, 0);
+      } else {
+        d = new Date(date);
+      }
+    } else if (date instanceof Date) {
+      // Handle Date objects
       d = new Date(date);
+    } else if (typeof date === 'object') {
+      // Handle Firestore Timestamp
+      if (date.seconds !== undefined && date.nanoseconds !== undefined) {
+        d = new Date(date.seconds * 1000);
+      } else if (date.toDate && typeof date.toDate === 'function') {
+        // Handle Firestore Timestamp with toDate method
+        d = date.toDate();
+      } else {
+        // Try to convert other date-like objects
+        d = new Date(date);
+      }
+    } else {
+      // Default fallback
+      d = new Date();
+      console.warn('Unrecognized date format in getMonthKey:', { originalDate: date });
     }
-  } else {
-    d = new Date();
-  }
 
-  if (isNaN(d.getTime())) {
-    console.error('Invalid date in getMonthKey:', { originalDate: date, parsedDate: d });
-    return '';
-  }
+    if (isNaN(d.getTime())) {
+      console.error('Invalid date in getMonthKey:', { 
+        originalDate: date, 
+        parsedDate: d,
+        type: typeof date,
+        isDate: date instanceof Date
+      });
+      // Return current month as fallback
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
 
-  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  console.log('Generated key:', key);
-  return key;
+    // Ensure consistent date representation by setting to noon
+    d.setHours(12, 0, 0, 0);
+    
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    
+  
+    
+    return key;
+  } catch (err) {
+    console.error('Error in getMonthKey:', { 
+      originalDate: date, 
+      error: err.message 
+    });
+    // Return current month as fallback
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
 }
 
 /**
@@ -161,18 +197,11 @@ export function formatAmount(amount) {
  * @returns {Object} - The start and end dates for the month
  */
 export function getMonthBoundaries(monthKey) {
-  console.log('Getting month boundaries for:', monthKey);
   const [year, month] = monthKey.split('-').map(Number);
   const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
   const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
   
-  console.log('Month boundaries:', {
-    monthKey,
-    startDate,
-    endDate,
-    year,
-    month
-  });
+ 
   
   return { startDate, endDate };
 }

@@ -17,12 +17,13 @@
 - [x] Balance calculation implementation
 - [x] Balance display UI with settlements
 - [x] Custom split implementation
-- [ ] Monthly Calendar System
+- [x] Monthly Calendar System
   - [x] Month-wise expense grouping
   - [x] Monthly total calculations
   - [ ] Monthly report generation
   - [ ] Monthly email notifications
   - [x] Zero balance start for new months
+  - [x] Robust date handling and timezone fixes
 - [x] Expense UI Improvements
   - [x] Replace "Paid by you/other" with user details
   - [x] Clickable member count with share details
@@ -58,7 +59,7 @@
 - Optimize database queries
 - Add automated tests for:
   - Monthly calculations
-  - Date handling
+  - Date handling ✓
   - Balance transitions
   - Report generation
   - Split functionality 

@@ -21,6 +21,19 @@ export default function ExpenseForm({ groupId, onSuccess }) {
   const [loading, setLoading] = useState(true);
   const [debug, setDebug] = useState('');
 
+  // Set today's date as initial value, ensuring noon time to avoid timezone issues
+  useEffect(() => {
+    try {
+      const today = new Date();
+      today.setHours(12, 0, 0, 0);
+   
+      
+      setExpenseDate(today);
+    } catch (err) {
+      console.error('Error setting initial date:', err);
+    }
+  }, []);
+
   // Fetch member profiles
   useEffect(() => {
     const fetchGroupAndMembers = async () => {
@@ -90,13 +103,16 @@ export default function ExpenseForm({ groupId, onSuccess }) {
         throw new Error('Please select at least one member to split with');
       }
 
+      // Validate expense date first
+      if (!expenseDate || !(expenseDate instanceof Date) || isNaN(expenseDate.getTime())) {
+        console.error('Invalid expense date before normalization:', expenseDate);
+        throw new Error('Please select a valid date');
+      }
+
       let shares = {};
       const totalAmount = parseFloat(amount);
 
-      // Log initial date state
-      console.log('Initial expense date:', expenseDate);
-      console.log('Expense date type:', typeof expenseDate);
-      console.log('Is Date instance:', expenseDate instanceof Date);
+    
 
       if (splitType === 'equal') {
         const shareAmount = Math.floor((totalAmount / selectedMembers.length) * 100) / 100;
@@ -119,9 +135,7 @@ export default function ExpenseForm({ groupId, onSuccess }) {
       const normalizedDate = new Date(expenseDate);
       normalizedDate.setHours(12, 0, 0, 0);
 
-      // Log normalized date
-      console.log('Normalized date:', normalizedDate);
-      console.log('Normalized date ISO:', normalizedDate.toISOString());
+  
 
       const expenseData = validateExpense({
         description: description.trim(),
@@ -134,19 +148,14 @@ export default function ExpenseForm({ groupId, onSuccess }) {
       });
 
       // Log validated expense data
-      console.log('Validated expense data:', expenseData);
-      console.log('Validated expense date:', expenseData.expenseDate);
-      console.log('Month key:', expenseData.month);
-
+    
       // Add expense to Firestore
       const expenseRef = await addDoc(collection(db, 'expenses'), expenseData);
 
       // Update monthly data
       const monthKey = getMonthKey(normalizedDate);
-      console.log('Monthly data key:', monthKey);
 
       const monthlyData = await getMonthlyData(groupId, monthKey);
-      console.log('Current monthly data:', monthlyData);
       
       // Update total expenses
       const newTotal = monthlyData.totalExpenses + totalAmount;
@@ -160,9 +169,7 @@ export default function ExpenseForm({ groupId, onSuccess }) {
       });
 
       // Log monthly updates
-      console.log('Updated monthly totals:', newTotal);
-      console.log('Updated balances:', newBalances);
-
+   
       await updateMonthlyData(groupId, monthKey, {
         totalExpenses: newTotal,
         memberBalances: newBalances,
@@ -174,12 +181,41 @@ export default function ExpenseForm({ groupId, onSuccess }) {
       setAmount('');
       setCustomShares({});
       setSplitType('equal');
-      setExpenseDate(new Date());
+      
+      // Set a fresh date (today at noon)
+      const freshDate = new Date();
+      freshDate.setHours(12, 0, 0, 0);
+      setExpenseDate(freshDate);
+      
+    
+      
+      setError('');
+      setDebug('');
       onSuccess?.();
     } catch (err) {
       console.error('Error creating expense:', err);
       setError(err.message);
-      setDebug(`Debug info: ${err.message}\nDate: ${expenseDate}\nNormalized: ${new Date(expenseDate).toISOString()}`);
+      
+      // Create detailed debug info
+      let dateDebugInfo = '';
+      try {
+        if (expenseDate) {
+          dateDebugInfo = `
+Date object: ${expenseDate}
+Date instanceof Date: ${expenseDate instanceof Date}
+Date isNaN: ${isNaN(expenseDate.getTime())}
+Date ISO string: ${expenseDate instanceof Date ? expenseDate.toISOString() : 'N/A'}
+Date for input: ${expenseDate instanceof Date ? expenseDate.toISOString().substring(0, 10) : 'N/A'}`;
+        } else {
+          dateDebugInfo = 'Date is null or undefined';
+        }
+      } catch (debugErr) {
+        dateDebugInfo = `Error getting date debug: ${debugErr.message}`;
+      }
+      
+      setDebug(`Debug info: ${err.message}
+${dateDebugInfo}
+Normalized: ${new Date().toISOString()}`);
     } finally {
       setLoading(false);
     }
@@ -246,16 +282,45 @@ export default function ExpenseForm({ groupId, onSuccess }) {
         <input
           type="date"
           id="expenseDate"
-          value={expenseDate instanceof Date ? expenseDate.toISOString().split('T')[0] : ''}
+          value={expenseDate instanceof Date && !isNaN(expenseDate.getTime())
+            ? expenseDate.toISOString().substring(0, 10)
+            : new Date().toISOString().substring(0, 10)}
           onChange={(e) => {
-            const selectedDate = new Date(e.target.value);
-            // Set time to noon to avoid timezone issues
-            selectedDate.setHours(12, 0, 0, 0);
-            setExpenseDate(selectedDate);
+            try {
+              // Parse the selected date and set time to noon
+              const dateValue = e.target.value;
+              console.log('Date input value:', dateValue);
+              
+              if (!dateValue) {
+                throw new Error('Empty date value');
+              }
+              
+              // Create date using the YYYY-MM-DD format directly
+              const [year, month, day] = dateValue.split('-').map(Number);
+              if (!year || !month || !day) {
+                throw new Error('Invalid date format');
+              }
+              
+              const selectedDate = new Date(year, month - 1, day, 12, 0, 0);
+              
+              if (isNaN(selectedDate.getTime())) {
+                throw new Error('Invalid date selected');
+              }
+              
+          
+              
+              setExpenseDate(selectedDate);
+            } catch (err) {
+              console.error('Error setting date:', err);
+              // Fall back to today's date on error
+              const today = new Date();
+              today.setHours(12, 0, 0, 0);
+              setExpenseDate(today);
+            }
           }}
           className="mt-1 input"
           required
-          max={new Date().toISOString().split('T')[0]}
+          max={new Date().toISOString().substring(0, 10)}
         />
       </div>
 

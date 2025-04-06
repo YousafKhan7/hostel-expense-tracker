@@ -21,10 +21,51 @@ export default function ExpenseList({ expenses, members, groupId }) {
   const sortedMonths = Object.keys(groupedExpenses).sort().reverse();
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      let dateObj;
+      
+      // Handle different date formats
+      if (!date) {
+        console.error('Null or undefined date provided to formatDate');
+        return 'Invalid Date';
+      }
+      
+      // Handle Firestore Timestamp
+      if (typeof date === 'object' && date.seconds !== undefined && date.nanoseconds !== undefined) {
+        dateObj = new Date(date.seconds * 1000);
+      }
+      // Handle Date object
+      else if (date instanceof Date) {
+        dateObj = new Date(date);
+      }
+      // Handle ISO string
+      else if (typeof date === 'string') {
+        dateObj = new Date(date);
+      }
+      // Handle other objects with toDate method (like Firestore Timestamp)
+      else if (typeof date === 'object' && typeof date.toDate === 'function') {
+        dateObj = date.toDate();
+      }
+      // Fallback
+      else {
+        dateObj = new Date(date);
+      }
+      
+      // Validate the date
+      if (isNaN(dateObj.getTime())) {
+        console.error('Invalid date in formatDate:', { originalDate: date, parsedDate: dateObj });
+        return 'Invalid Date';
+      }
+      
+      // Format the date
+      return dateObj.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (err) {
+      console.error('Error formatting date:', err, { date });
+      return 'Invalid Date';
+    }
   };
 
   const getMonthDisplay = (monthKey) => {
