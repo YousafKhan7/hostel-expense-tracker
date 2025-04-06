@@ -19,6 +19,7 @@ export default function ExpenseForm({ groupId, onSuccess }) {
   const [expenseDate, setExpenseDate] = useState(new Date());
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [debug, setDebug] = useState('');
 
   // Fetch member profiles
   useEffect(() => {
@@ -78,6 +79,7 @@ export default function ExpenseForm({ groupId, onSuccess }) {
     e.preventDefault();
     setError('');
     setLoading(true);
+    setDebug('');
 
     try {
       if (!amount || isNaN(parseFloat(amount))) {
@@ -91,10 +93,14 @@ export default function ExpenseForm({ groupId, onSuccess }) {
       let shares = {};
       const totalAmount = parseFloat(amount);
 
+      // Log initial date state
+      console.log('Initial expense date:', expenseDate);
+      console.log('Expense date type:', typeof expenseDate);
+      console.log('Is Date instance:', expenseDate instanceof Date);
+
       if (splitType === 'equal') {
         const shareAmount = Math.floor((totalAmount / selectedMembers.length) * 100) / 100;
         selectedMembers.forEach((memberId, index) => {
-          // Last member gets remaining amount to handle rounding
           if (index === selectedMembers.length - 1) {
             shares[memberId] = Math.round((totalAmount - (shareAmount * (selectedMembers.length - 1))) * 100) / 100;
           } else {
@@ -102,13 +108,20 @@ export default function ExpenseForm({ groupId, onSuccess }) {
           }
         });
       } else {
-        // Validate custom shares
         const totalShares = Object.values(customShares).reduce((sum, share) => sum + (share || 0), 0);
         if (Math.abs(totalShares - totalAmount) > 0.01) {
           throw new Error('The sum of shares must equal the total amount');
         }
         shares = customShares;
       }
+
+      // Create a new date object at noon to avoid timezone issues
+      const normalizedDate = new Date(expenseDate);
+      normalizedDate.setHours(12, 0, 0, 0);
+
+      // Log normalized date
+      console.log('Normalized date:', normalizedDate);
+      console.log('Normalized date ISO:', normalizedDate.toISOString());
 
       const expenseData = validateExpense({
         description: description.trim(),
@@ -117,31 +130,39 @@ export default function ExpenseForm({ groupId, onSuccess }) {
         groupId,
         shares,
         splitType,
-        expenseDate: new Date(expenseDate)
+        expenseDate: normalizedDate
       });
+
+      // Log validated expense data
+      console.log('Validated expense data:', expenseData);
+      console.log('Validated expense date:', expenseData.expenseDate);
+      console.log('Month key:', expenseData.month);
 
       // Add expense to Firestore
       const expenseRef = await addDoc(collection(db, 'expenses'), expenseData);
 
       // Update monthly data
-      const monthKey = getMonthKey(expenseDate);
+      const monthKey = getMonthKey(normalizedDate);
+      console.log('Monthly data key:', monthKey);
+
       const monthlyData = await getMonthlyData(groupId, monthKey);
+      console.log('Current monthly data:', monthlyData);
       
       // Update total expenses
       const newTotal = monthlyData.totalExpenses + totalAmount;
       
       // Update member balances
       const newBalances = { ...monthlyData.memberBalances };
-      
-      // Add amount to payer's balance
       newBalances[user.uid] = (newBalances[user.uid] || 0) + totalAmount;
       
-      // Subtract shares from members' balances
       Object.entries(shares).forEach(([memberId, share]) => {
         newBalances[memberId] = (newBalances[memberId] || 0) - share;
       });
 
-      // Update monthly data in Firestore
+      // Log monthly updates
+      console.log('Updated monthly totals:', newTotal);
+      console.log('Updated balances:', newBalances);
+
       await updateMonthlyData(groupId, monthKey, {
         totalExpenses: newTotal,
         memberBalances: newBalances,
@@ -156,7 +177,9 @@ export default function ExpenseForm({ groupId, onSuccess }) {
       setExpenseDate(new Date());
       onSuccess?.();
     } catch (err) {
+      console.error('Error creating expense:', err);
       setError(err.message);
+      setDebug(`Debug info: ${err.message}\nDate: ${expenseDate}\nNormalized: ${new Date(expenseDate).toISOString()}`);
     } finally {
       setLoading(false);
     }
@@ -172,6 +195,11 @@ export default function ExpenseForm({ groupId, onSuccess }) {
       {error && (
         <div className="rounded-md bg-red-50 p-4">
           <p className="text-sm text-red-600">{error}</p>
+          {debug && (
+            <pre className="mt-2 text-xs text-gray-600 whitespace-pre-wrap">
+              {debug}
+            </pre>
+          )}
         </div>
       )}
 
@@ -218,15 +246,16 @@ export default function ExpenseForm({ groupId, onSuccess }) {
         <input
           type="date"
           id="expenseDate"
-          value={new Date(expenseDate).toISOString().split('T')[0]}
+          value={expenseDate instanceof Date ? expenseDate.toISOString().split('T')[0] : ''}
           onChange={(e) => {
-            // Create date object at noon to avoid timezone issues
-            const date = new Date(e.target.value + 'T12:00:00');
-            setExpenseDate(date);
+            const selectedDate = new Date(e.target.value);
+            // Set time to noon to avoid timezone issues
+            selectedDate.setHours(12, 0, 0, 0);
+            setExpenseDate(selectedDate);
           }}
           className="mt-1 input"
           required
-          max={new Date().toISOString().split('T')[0]} // Prevent future dates
+          max={new Date().toISOString().split('T')[0]}
         />
       </div>
 
