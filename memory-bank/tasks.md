@@ -1,62 +1,44 @@
-# Hostel Expense Tracker - Task Tracking
+# Project Tasks
 
-## Phase 1: Implementing Core Group Features & Expense Splitting
+## Phase 1: Core Features & Expense Splitting
 
 ### Step 1: User Profile & Member Management
-- [x] Implement user profiles
-  - [x] Add name field to signup
-  - [x] Create user profile in Firestore
-  - [x] Display user information in member list
-- [x] Enhance member management
-  - [x] Add member role management (admin/member)
-  - [x] Allow removing members
-  - [x] Show member join dates
+- [x] Implement user profiles with names and emails
+- [x] Display member information in groups
+- [x] Show member join dates
+- [x] Add member role management
+- [ ] Allow removing members from groups
 
-### Step 2: Group Member Management
-- [x] Implement group invitation system
-  - [x] Add invite code generation
-  - [x] Create join group functionality
-  - [x] Add member display with emails/names
-  - [x] Add member role management (admin/member)
-- [x] Add member management UI
-  - [x] Show current members list
-  - [x] Allow removing members
-  - [x] Show member join dates
+### Step 2: Expense Management
+- [x] Basic expense creation
+- [x] Split member selection
+- [x] Split type selection (Equal/Custom)
+- [x] Split amount validation
+- [x] Balance calculation implementation
+- [x] Balance display UI with settlements
+- [ ] Custom split implementation
+- [ ] Expense categories
+- [ ] Expense attachments
 
-### Step 3: Enhance Expense Functionality
-- [x] Update expense data model
-- [x] Update Firestore expense document
-- [x] Enhance expense display
-- [x] Add split member selection
-- [x] Add split type selection (Equal splits implemented, Custom splits prepared)
-- [x] Implement split amount validation
-
-### Step 4: Balance Calculation (Current Focus)
-- [ ] Implement balance calculation logic
-- [ ] Add balance display UI
-- [ ] Add settlement suggestions
-
-## Phase 2: Group Management Features
-
-### Step 5: Group Members Display
-- [ ] Create member list component
-- [ ] Fetch and display member details
-- [ ] Add member role indicators
-- [ ] Implement member list sorting/filtering
-
-### Step 6: Member Management
-- [ ] Implement add member by email functionality
-- [ ] Create invite system
-- [ ] Add member removal functionality
-- [ ] Implement member permissions
-
-## Phase 3: Settlement Features
-
-### Step 7: Payment Recording
-- [ ] Create payment recording UI
-- [ ] Implement payment data model
-- [ ] Add payment history tracking
-- [ ] Implement settlement verification
+### Step 3: Group Management
+- [x] Create new groups
+- [x] Join existing groups
+- [x] Group invitation system
+- [ ] Group settings
+- [ ] Group categories/tags
 
 ## Current Focus
-Currently working on: Phase 1, Step 4 - Balance Calculation 
+- Implementing expense categories and attachments
+- Enhancing group management features
+
+## Next Steps
+1. Add expense categories and tags
+2. Implement file upload for expense attachments
+3. Add group settings and management features
+
+## Technical Debt
+- Add error boundaries for component failures
+- Implement proper loading states
+- Add comprehensive input validation
+- Optimize database queries
+- Add automated tests 

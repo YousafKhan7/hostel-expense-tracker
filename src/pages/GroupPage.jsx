@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Common/Modal';
 import MemberList from '../components/Group/MemberList';
 import ExpenseForm from '../components/Expense/ExpenseForm';
+import BalanceDisplay from '../components/Balance/BalanceDisplay';
 
 export default function GroupPage() {
   const { groupId } = useParams();
@@ -211,6 +212,10 @@ export default function GroupPage() {
             {/* Members Section - 1/3 width on large screens */}
             <div className="lg:col-span-1">
               <MemberList group={group} />
+              <div className="mt-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Group Balance</h2>
+                <BalanceDisplay group={group} expenses={expenses} />
+              </div>
             </div>
           </div>
 
