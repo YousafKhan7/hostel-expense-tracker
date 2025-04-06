@@ -18,15 +18,15 @@
 - [x] Balance display UI with settlements
 - [x] Custom split implementation
 - [ ] Monthly Calendar System
-  - [ ] Month-wise expense grouping
-  - [ ] Monthly total calculations
+  - [x] Month-wise expense grouping
+  - [x] Monthly total calculations
   - [ ] Monthly report generation
   - [ ] Monthly email notifications
-  - [ ] Zero balance start for new months
-- [ ] Expense UI Improvements
-  - [ ] Replace "Paid by you/other" with user details
-  - [ ] Clickable member count with share details
-  - [ ] Enhanced expense details view
+  - [x] Zero balance start for new months
+- [x] Expense UI Improvements
+  - [x] Replace "Paid by you/other" with user details
+  - [x] Clickable member count with share details
+  - [x] Enhanced expense details view
 - [ ] Expense categories
 - [ ] Expense attachments
 
@@ -38,21 +38,27 @@
 - [ ] Group categories/tags
 
 ## Current Focus
-- Implementing Monthly Calendar System
-- Enhancing expense display UI
-- Monthly reporting system
+- Implementing Monthly Report Generation
+- Setting up Email Notification System
+- Adding Expense Categories
 
 ## Next Steps
-1. Implement monthly calendar view
-2. Add monthly totals and reporting
-3. Enhance expense display with user details
-4. Add member share details popup
-5. Implement monthly email notifications
-6. Add expense categories and tags
+1. [x] Implement monthly calendar view
+2. [x] Add monthly totals and filtering
+3. [x] Enhance expense display with user details
+4. [x] Add member share details popup
+5. [ ] Implement monthly report generation
+6. [ ] Set up email notification system
+7. [ ] Add expense categories and tags
 
 ## Technical Debt
 - Add error boundaries for component failures
 - Implement proper loading states
 - Add comprehensive input validation
 - Optimize database queries
-- Add automated tests for split functionality 
+- Add automated tests for:
+  - Monthly calculations
+  - Date handling
+  - Balance transitions
+  - Report generation
+  - Split functionality 

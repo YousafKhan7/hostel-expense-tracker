@@ -218,10 +218,15 @@ export default function ExpenseForm({ groupId, onSuccess }) {
         <input
           type="date"
           id="expenseDate"
-          value={expenseDate.toISOString().split('T')[0]}
-          onChange={(e) => setExpenseDate(new Date(e.target.value))}
+          value={new Date(expenseDate).toISOString().split('T')[0]}
+          onChange={(e) => {
+            // Create date object at noon to avoid timezone issues
+            const date = new Date(e.target.value + 'T12:00:00');
+            setExpenseDate(date);
+          }}
           className="mt-1 input"
           required
+          max={new Date().toISOString().split('T')[0]} // Prevent future dates
         />
       </div>
 

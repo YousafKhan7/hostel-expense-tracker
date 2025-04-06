@@ -28,25 +28,29 @@
 ## In Progress
 - Monthly Calendar System Implementation
   - Core System Design:
-    - UTC timestamp storage
-    - Local timezone display
-    - Month-based filtering
-    - Continuous balance tracking
+    - [x] UTC timestamp storage
+    - [x] Local timezone display
+    - [x] Month-based filtering
+    - [x] Continuous balance tracking
   - Data Structure Updates:
-    - MonthlyData collection design
-    - UserSettings schema
-    - Expense schema updates
+    - [x] MonthlyData collection design
+    - [x] UserSettings schema
+    - [x] Expense schema updates
   - UI Components:
-    - ExpenseCalendar development
-    - Enhanced expense display
-    - Share details modal
+    - [x] ExpenseCalendar development
+    - [x] Enhanced expense display
+    - [x] Share details modal
+  - Next Features:
+    - [ ] Monthly report generation
+    - [ ] Email notifications
+    - [ ] Monthly totals export
 
 ## Upcoming
 1. Monthly System Phases:
-   - Phase 1: Core date handling and filtering
-   - Phase 2: Enhanced UI and user details
-   - Phase 3: Report generation and export
-   - Phase 4: Email notifications
+   - [x] Phase 1: Core date handling and filtering
+   - [x] Phase 2: Enhanced UI and user details
+   - [ ] Phase 3: Report generation and export
+   - [ ] Phase 4: Email notifications
 
 2. Additional Features:
    - Expense categories
@@ -55,14 +59,14 @@
 
 ## Technical Implementation Decisions
 1. Date Handling:
-   - Store all timestamps in UTC
-   - Display in user's local timezone
-   - Future support for group timezones
+   - [x] Store all timestamps in UTC
+   - [x] Display in user's local timezone
+   - [ ] Future support for group timezones
 
 2. Balance Management:
-   - No manual balance adjustments
-   - Automatic monthly transitions
-   - Continuous balance calculation
+   - [x] No manual balance adjustments
+   - [x] Automatic monthly transitions
+   - [x] Continuous balance calculation
 
 3. Notification System:
    - User-configurable preferences

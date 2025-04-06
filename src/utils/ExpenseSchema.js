@@ -25,6 +25,11 @@ export function validateExpense(expenseData) {
   if (!paidBy) throw new Error('Payer information is required');
   if (!groupId) throw new Error('Group ID is required');
   if (!shares || Object.keys(shares).length === 0) throw new Error('Shares information is required');
+  
+  // Validate date
+  const parsedDate = expenseDate ? new Date(expenseDate) : new Date();
+  if (isNaN(parsedDate.getTime())) throw new Error('Invalid date');
+  if (parsedDate > new Date()) throw new Error('Cannot create expenses for future dates');
 
   // Validate total shares equals amount
   const totalShares = Object.values(shares).reduce((sum, share) => sum + (share || 0), 0);
@@ -40,11 +45,11 @@ export function validateExpense(expenseData) {
     groupId,
     shares,
     splitType: splitType || 'equal',
-    expenseDate: expenseDate || new Date(), // Store as UTC
+    expenseDate: parsedDate, // Use the parsed date
     category: category || 'uncategorized',
     createdAt: new Date(),
     updatedAt: new Date(),
-    month: getMonthKey(expenseDate || new Date()), // YYYY-MM format
+    month: getMonthKey(parsedDate), // Use the parsed date
     settled: false,
     settledAt: null
   };

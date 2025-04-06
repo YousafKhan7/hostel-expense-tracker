@@ -7,6 +7,9 @@ import Modal from '../components/Common/Modal';
 import MemberList from '../components/Group/MemberList';
 import ExpenseForm from '../components/Expense/ExpenseForm';
 import BalanceDisplay from '../components/Balance/BalanceDisplay';
+import ExpenseList from '../components/Expense/ExpenseList';
+import ExpenseCalendar from '../components/Expense/ExpenseCalendar';
+import { getMonthKey, getMonthBoundaries } from '../utils/ExpenseSchema';
 
 export default function GroupPage() {
   const { groupId } = useParams();
@@ -16,6 +19,7 @@ export default function GroupPage() {
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(getMonthKey(new Date()));
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
@@ -52,9 +56,12 @@ export default function GroupPage() {
     fetchGroup();
 
     // Subscribe to expenses
+    const { startDate, endDate } = getMonthBoundaries(selectedMonth);
     const q = query(
       collection(db, 'expenses'),
-      where('groupId', '==', groupId)
+      where('groupId', '==', groupId),
+      where('expenseDate', '>=', startDate),
+      where('expenseDate', '<=', endDate)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -67,7 +74,7 @@ export default function GroupPage() {
     });
 
     return () => unsubscribe();
-  }, [groupId, user, navigate]);
+  }, [groupId, user, navigate, selectedMonth]);
 
   const handleAddExpense = async (expenseData) => {
     try {
@@ -151,71 +158,25 @@ export default function GroupPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Expenses Section - 2/3 width on large screens */}
-            <div className="lg:col-span-2">
-              {expenses.length === 0 ? (
-                <div className="text-center py-12 bg-white shadow rounded-lg">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No expenses yet
-                  </h3>
-                  <p className="text-gray-500">
-                    Add your first expense to start tracking.
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                  <ul className="divide-y divide-gray-200">
-                    {expenses.map((expense) => (
-                      <li key={expense.id} className="hover:bg-gray-50">
-                        <div className="px-4 py-4 sm:px-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex flex-col">
-                              <p className="text-sm font-medium text-primary-600 truncate">
-                                {expense.description}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {getSplitSummary(expense)}
-                              </p>
-                            </div>
-                            <div className="ml-2 flex-shrink-0 flex flex-col items-end">
-                              <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                ${expense.amount.toFixed(2)}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {expense.splitType}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="mt-2 sm:flex sm:justify-between">
-                            <div className="sm:flex flex-col">
-                              <p className="flex items-center text-sm text-gray-500">
-                                Paid by {formatMemberName(expense.paidBy)}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                Split with {expense.splitAmong?.length || 0} members
-                              </p>
-                            </div>
-                            <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                              <p>
-                                {new Date(expense.createdAt?.toDate()).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            {/* Left Column - Calendar and Expenses */}
+            <div className="lg:col-span-2 space-y-6">
+              <ExpenseCalendar
+                groupId={groupId}
+                expenses={expenses}
+                onMonthChange={setSelectedMonth}
+              />
+              
+              <ExpenseList
+                expenses={expenses}
+                members={group?.members || {}}
+                groupId={groupId}
+              />
             </div>
 
-            {/* Members Section - 1/3 width on large screens */}
-            <div className="lg:col-span-1">
+            {/* Right Column - Members and Balance */}
+            <div className="lg:col-span-1 space-y-6">
               <MemberList group={group} />
-              <div className="mt-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Group Balance</h2>
-                <BalanceDisplay group={group} expenses={expenses} />
-              </div>
+              <BalanceDisplay group={group} expenses={expenses} />
             </div>
           </div>
 
