@@ -1,26 +1,29 @@
 # Hostel Expense Tracker - Task Tracking
 
-## Phase 1: Implementing Expense Splitting & Balance Calculation
+## Phase 1: Implementing Core Group Features & Expense Splitting
 
-### Step 1: Enhance Expense Functionality & Data Model
-- [x] Update expense data model to include splitAmong field
-- [x] Update Firestore expense document structure
-- [x] Implement default split among all group members
-- [ ] Add split member selection UI
-- [ ] Add split type selection (for future custom splits)
-- [ ] Enhance expense display to show split details
+### Step 1: Group Member Management
+- [x] Implement group invitation system
+  - [x] Add invite code generation
+  - [x] Create join group functionality
+  - [x] Add member display with emails/names
+  - [ ] Add member role management (admin/member)
+- [ ] Add member management UI
+  - [x] Show current members list
+  - [ ] Allow removing members
+  - [ ] Show member join dates
 
-### Step 2: Balance Calculation Logic
-- [ ] Implement balance calculation for group members
-- [ ] Create utility functions for balance calculations
-- [ ] Add real-time balance updates
-- [ ] Handle edge cases and validation
+### Step 2: Enhance Expense Functionality
+- [x] Update expense data model
+- [x] Update Firestore expense document
+- [x] Enhance expense display
+- [ ] Add split member selection (after member management)
+- [ ] Add split type selection
 
-### Step 3: Display Balances
-- [ ] Create balance display UI component
-- [ ] Implement balance visualization
-- [ ] Add sorting and filtering options
-- [ ] Include settlement suggestions
+### Step 3: Balance Calculation
+- [ ] Implement balance calculation logic
+- [ ] Add balance display UI
+- [ ] Add settlement suggestions
 
 ## Phase 2: Group Management Features
 

@@ -1,39 +1,40 @@
 # Active Development Context
 
-## Current Phase: Phase 1 - Expense Splitting & Balance Calculation
+## Current Phase: Phase 1 - Core Group Features & Expense Splitting
 **Mode**: IMPLEMENT
-**Step**: 1.2 - Enhance Expense Display & UI
+**Step**: 1.2 - Member Display
 
 ### Current Objectives
-1. Enhance expense display to show split information
-2. Add member selection UI for splits
-3. Implement split type selection UI
+1. Add member display with emails/names
+2. Implement member role management
+3. Create member list UI
 
 ### Active Components
 - GroupPage.jsx
-- Modal.jsx (for expense creation)
-- Expense list display
+- New components needed:
+  - MemberList.jsx
+  - MemberCard.jsx
 
 ### Technical Considerations
-- UI/UX for split member selection
-- Split amount validation
-- Real-time updates for split information
-- Performance with larger member lists
+- Need to fetch user profiles for member display
+- Consider caching member data for performance
+- Real-time updates for member list
+- UI/UX for member roles and permissions
 
 ### Next Steps
-1. Update expense list to show split details
-2. Add member selection component
-3. Implement split type selector
-4. Add split validation
+1. Create MemberList component
+2. Fetch user profiles for members
+3. Add member role indicators
+4. Implement member management UI
 
 ### Questions/Decisions
-- How to display split information in the expense list?
-- Should we show individual shares in the main list or in a detail view?
-- How to handle uneven splits in the future?
-- Should we allow editing splits after creation?
+- How to handle member profile data storage?
+- What member roles do we need?
+- How to display member status?
+- Should we show member join dates?
 
 ### Resources
-- Tailwind UI components
-- Firebase Firestore documentation
-- React form handling patterns
-- Existing expense tracking logic 
+- Firebase Authentication docs
+- Firestore security rules
+- User profile data structure
+- Existing group structure 

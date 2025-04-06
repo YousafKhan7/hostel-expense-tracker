@@ -4,6 +4,7 @@ import { collection, query, where, onSnapshot, doc, getDoc, addDoc } from 'fireb
 import { db } from '../services/firebaseConfig';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Common/Modal';
+import MemberList from '../components/Group/MemberList';
 
 export default function GroupPage() {
   const { groupId } = useParams();
@@ -11,6 +12,8 @@ export default function GroupPage() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
@@ -130,6 +133,16 @@ export default function GroupPage() {
     return `Split equally • $${shareAmount} each`;
   };
 
+  const handleCopyInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(groupId);
+      setInviteCopied(true);
+      setTimeout(() => setInviteCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -147,68 +160,89 @@ export default function GroupPage() {
               <h1 className="text-3xl font-bold text-gray-900">{group?.name}</h1>
               <p className="text-gray-500 mt-1">{group?.members.length} members</p>
             </div>
-            <button
-              onClick={() => setIsAddExpenseModalOpen(true)}
-              className="btn btn-primary"
-            >
-              Add Expense
-            </button>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setIsInviteModalOpen(true)}
+                className="btn btn-secondary"
+              >
+                Share Group
+              </button>
+              <button
+                onClick={() => setIsAddExpenseModalOpen(true)}
+                className="btn btn-primary"
+              >
+                Add Expense
+              </button>
+            </div>
           </div>
 
-          {expenses.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No expenses yet
-              </h3>
-              <p className="text-gray-500">
-                Add your first expense to start tracking.
-              </p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Expenses Section - 2/3 width on large screens */}
+            <div className="lg:col-span-2">
+              {expenses.length === 0 ? (
+                <div className="text-center py-12 bg-white shadow rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No expenses yet
+                  </h3>
+                  <p className="text-gray-500">
+                    Add your first expense to start tracking.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                  <ul className="divide-y divide-gray-200">
+                    {expenses.map((expense) => (
+                      <li key={expense.id} className="hover:bg-gray-50">
+                        <div className="px-4 py-4 sm:px-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <p className="text-sm font-medium text-primary-600 truncate">
+                                {expense.description}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {getSplitSummary(expense)}
+                              </p>
+                            </div>
+                            <div className="ml-2 flex-shrink-0 flex flex-col items-end">
+                              <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                ${expense.amount.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {expense.splitType}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-2 sm:flex sm:justify-between">
+                            <div className="sm:flex flex-col">
+                              <p className="flex items-center text-sm text-gray-500">
+                                Paid by {formatMemberName(expense.paidBy)}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Split with {expense.splitAmong?.length || 0} members
+                              </p>
+                            </div>
+                            <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                              <p>
+                                {new Date(expense.createdAt?.toDate()).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
-              <ul className="divide-y divide-gray-200">
-                {expenses.map((expense) => (
-                  <li key={expense.id} className="hover:bg-gray-50">
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                          <p className="text-sm font-medium text-primary-600 truncate">
-                            {expense.description}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {getSplitSummary(expense)}
-                          </p>
-                        </div>
-                        <div className="ml-2 flex-shrink-0 flex flex-col items-end">
-                          <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            ${expense.amount.toFixed(2)}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {expense.splitType}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-2 sm:flex sm:justify-between">
-                        <div className="sm:flex flex-col">
-                          <p className="flex items-center text-sm text-gray-500">
-                            Paid by {formatMemberName(expense.paidBy)}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Split with {expense.splitAmong?.length || 0} members
-                          </p>
-                        </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                          <p>
-                            {new Date(expense.createdAt?.toDate()).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+
+            {/* Members Section - 1/3 width on large screens */}
+            <div className="lg:col-span-1">
+              <MemberList 
+                members={group?.members || []} 
+                groupCreator={group?.createdBy}
+              />
             </div>
-          )}
+          </div>
 
           <Modal
             isOpen={isAddExpenseModalOpen}
@@ -295,6 +329,39 @@ export default function GroupPage() {
                 </button>
               </div>
             </form>
+          </Modal>
+
+          <Modal
+            isOpen={isInviteModalOpen}
+            onClose={() => {
+              setIsInviteModalOpen(false);
+              setInviteCopied(false);
+            }}
+            title="Share Group"
+          >
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Share this code with others to invite them to the group:
+              </p>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={groupId}
+                  className="input flex-grow bg-gray-50"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyInvite}
+                  className="btn btn-secondary"
+                >
+                  {inviteCopied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">
+                They can use this code on the Join Group page to become a member.
+              </p>
+            </div>
           </Modal>
         </div>
       </div>

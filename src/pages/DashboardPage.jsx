@@ -74,12 +74,20 @@ export default function DashboardPage() {
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900">Your Groups</h1>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="btn btn-primary"
-            >
-              Create New Group
-            </button>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => navigate('/join')}
+                className="btn btn-secondary"
+              >
+                Join Group
+              </button>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="btn btn-primary"
+              >
+                Create New Group
+              </button>
+            </div>
           </div>
 
           {groups.length === 0 ? (
@@ -87,9 +95,23 @@ export default function DashboardPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No groups yet
               </h3>
-              <p className="text-gray-500">
-                Create a new group to start tracking expenses with friends.
+              <p className="text-gray-500 mb-6">
+                Create a new group or join an existing one to start tracking expenses with friends.
               </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => navigate('/join')}
+                  className="btn btn-secondary"
+                >
+                  Join Existing Group
+                </button>
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="btn btn-primary"
+                >
+                  Create New Group
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-3">
