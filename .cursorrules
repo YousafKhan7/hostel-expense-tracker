@@ -1,0 +1,100 @@
+# Cursor Development Rules
+
+## 1. Input Processing Workflow
+1. When user input is received:
+   - First, read and understand these rules
+   - Check if input aligns with current development phase
+   - Validate against project requirements
+
+## 2. Memory Bank Integration
+1. Visit and analyze memory-bank directory files in this order:
+   - project-overview.md (understand current state)
+   - tasks.md (check task status)
+   - activeContext.md (understand current focus)
+   - progress.md (verify progress status)
+   - creative-*.md (review design decisions)
+   - system-diagram.md (verify architectural alignment)
+
+2. Extract key information:
+   - Current development phase
+   - Active tasks
+   - Technical considerations
+   - Design decisions
+   - Implementation progress
+
+## 3. Development Planning
+1. Before any implementation:
+   - Identify next task from memory-bank files
+   - Review related design decisions
+   - Plan implementation approach
+   - Validate against project architecture
+
+2. During implementation:
+   - Follow design patterns from creative-*.md
+   - Maintain consistency with existing code
+   - Consider performance implications
+   - Follow error handling patterns
+
+## 4. Memory Bank Updates
+After completing any task:
+1. Update tasks.md:
+   - Mark completed items
+   - Add new tasks if identified
+
+2. Update progress.md:
+   - Record implementation status
+   - Note any technical debt
+   - Update testing status
+
+3. Update activeContext.md:
+   - Reflect current focus
+   - Update technical considerations
+   - Note any new decisions
+
+4. If new design decisions made:
+   - Create or update creative-*.md files
+   - Document rationale and implications
+
+## 5. Code Quality Rules
+1. Follow established patterns:
+   - Consistent error handling
+   - Proper loading states
+   - Real-time updates where needed
+   - Type safety and validation
+
+2. Documentation:
+   - Clear component documentation
+   - Updated README if needed
+   - Inline comments for complex logic
+
+## 6. Testing Requirements
+1. For each change:
+   - Verify functionality
+   - Check error cases
+   - Test edge cases
+   - Validate UX flow
+
+## 7. Commit Guidelines
+1. Before completing task:
+   - Update all relevant memory-bank files
+   - Verify changes against rules
+   - Ensure documentation is current
+
+## 8. Error Handling
+1. When encountering issues:
+   - Document in memory-bank/progress.md
+   - Update technical debt section
+   - Plan resolution approach
+
+## 9. Project Structure
+1. Maintain organization:
+   - Follow existing file structure
+   - Use appropriate directories
+   - Keep related code together
+
+## 10. Communication
+1. In responses:
+   - Reference memory-bank files
+   - Explain decisions
+   - Link to relevant documentation
+   - Provide clear next steps 
