@@ -6,7 +6,8 @@ export default function CustomSplitInput({
   totalAmount, 
   selectedMembers, 
   onSplitChange,
-  initialShares = {}
+  initialShares = {},
+  currentUserId
 }) {
   const { user } = useAuth();
   const [shares, setShares] = useState(initialShares);
@@ -111,7 +112,10 @@ export default function CustomSplitInput({
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900">
-                      {memberId === user.uid ? 'You' : (members[memberId]?.name || 'Unknown User')}
+                      {memberId === currentUserId ? 'You' : (members[memberId]?.name || 'Unknown User')}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {members[memberId]?.email || 'No email available'}
                     </p>
                   </div>
                 </div>

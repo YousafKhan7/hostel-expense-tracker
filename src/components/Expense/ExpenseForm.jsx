@@ -16,14 +16,13 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
   const [customShares, setCustomShares] = useState({});
   const { user } = useAuth();
 
-  // Initialize selected members with all group members except current user
+  // Initialize selected members with ALL group members (including current user)
   useEffect(() => {
     if (group?.members) {
-      const initialSelected = Object.keys(group.members)
-        .filter(memberId => memberId !== user.uid);
+      const initialSelected = Object.keys(group.members);
       setSelectedMembers(initialSelected);
     }
-  }, [group?.members, user.uid]);
+  }, [group?.members]);
 
   // Calculate and validate split amounts
   useEffect(() => {
@@ -266,35 +265,33 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
           <div className="bg-white rounded-lg border border-gray-200">
             <ul className="divide-y divide-gray-200">
               {Object.entries(group.members).map(([memberId, member]) => (
-                memberId !== user.uid && (
-                  <li key={memberId} className="px-4 py-3">
-                    <div className="relative flex items-start">
-                      <div className="flex items-center h-5">
-                        <input
-                          type="checkbox"
-                          checked={selectedMembers.includes(memberId)}
-                          onChange={() => handleMemberToggle(memberId)}
-                          className="h-4 w-4 text-primary-600 rounded border-gray-300"
-                        />
+                <li key={memberId} className="px-4 py-3">
+                  <div className="relative flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        type="checkbox"
+                        checked={selectedMembers.includes(memberId)}
+                        onChange={() => handleMemberToggle(memberId)}
+                        className="h-4 w-4 text-primary-600 rounded border-gray-300"
+                      />
+                    </div>
+                    <div className="ml-3 flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                        <span className="text-sm font-medium text-primary-800">
+                          {(memberProfiles[memberId]?.name?.[0] || '?').toUpperCase()}
+                        </span>
                       </div>
-                      <div className="ml-3 flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                          <span className="text-sm font-medium text-primary-800">
-                            {(memberProfiles[memberId]?.name?.[0] || '?').toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="ml-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            {memberProfiles[memberId]?.name || 'Unknown User'}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {memberProfiles[memberId]?.email || 'No email available'}
-                          </p>
-                        </div>
+                      <div className="ml-2">
+                        <p className="text-sm font-medium text-gray-900">
+                          {memberId === user.uid ? 'You' : (memberProfiles[memberId]?.name || 'Unknown User')}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {memberProfiles[memberId]?.email || 'No email available'}
+                        </p>
                       </div>
                     </div>
-                  </li>
-                )
+                  </div>
+                </li>
               ))}
             </ul>
           </div>
@@ -305,9 +302,10 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
         <CustomSplitInput
           members={memberProfiles}
           totalAmount={parseFloat(amount)}
-          selectedMembers={Object.keys(group.members).filter(id => id !== user.uid)}
+          selectedMembers={Object.keys(group.members)}
           onSplitChange={handleCustomShareChange}
           initialShares={customShares}
+          currentUserId={user.uid}
         />
       )}
 
