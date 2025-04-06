@@ -19,25 +19,67 @@
   - Split amount validation
   - Balance calculation
   - Balance display with settlements
+  - Custom split implementation with:
+    - Real-time amount validation
+    - Remaining amount distribution
+    - Per-member amount input
+    - Proper user inclusion in splits
 
 ## In Progress
-- Expense Categories Implementation
-  - Designing category structure
-  - UI for category selection
-  - Category-based expense filtering
+- Monthly Calendar System Implementation
+  - Core System Design:
+    - UTC timestamp storage
+    - Local timezone display
+    - Month-based filtering
+    - Continuous balance tracking
+  - Data Structure Updates:
+    - MonthlyData collection design
+    - UserSettings schema
+    - Expense schema updates
+  - UI Components:
+    - ExpenseCalendar development
+    - Enhanced expense display
+    - Share details modal
 
 ## Upcoming
-1. Expense attachments
-2. Group settings and management
-3. Custom split implementation
+1. Monthly System Phases:
+   - Phase 1: Core date handling and filtering
+   - Phase 2: Enhanced UI and user details
+   - Phase 3: Report generation and export
+   - Phase 4: Email notifications
+
+2. Additional Features:
+   - Expense categories
+   - Expense attachments
+   - Enhanced filtering and sorting
+
+## Technical Implementation Decisions
+1. Date Handling:
+   - Store all timestamps in UTC
+   - Display in user's local timezone
+   - Future support for group timezones
+
+2. Balance Management:
+   - No manual balance adjustments
+   - Automatic monthly transitions
+   - Continuous balance calculation
+
+3. Notification System:
+   - User-configurable preferences
+   - Multiple notification types
+   - Flexible delivery options
 
 ## Testing Status
 - Manual testing of core features complete
 - Need automated tests for:
   - Balance calculation
   - Split validation
+  - Custom split functionality
+  - Monthly transitions
+  - Email notifications
   - User authentication
   - Group management
+  - Date handling and timezone logic
 
 ## Technical Debt
 - Optimize database queries for member profiles
@@ -45,13 +87,23 @@
 - Implement comprehensive input validation
 - Add loading states for async operations
 - Improve error handling and user feedback
+- Add unit tests for split calculations
+- Ensure email delivery reliability
+- Handle timezone edge cases
+- Implement proper data indexing
+- Add performance monitoring
 
 ## Known Issues
 - Large member lists may cause performance issues
 - Settlement calculations may have minor rounding differences
 - Need to handle offline state better
+- Month transition edge cases need consideration
+- Timezone differences in monthly reports
 
 ## Next Actions
-1. Design and implement expense categories
-2. Add file upload functionality for attachments
-3. Enhance group management features 
+1. Create MonthlyData collection structure
+2. Update expense schema with proper date fields
+3. Implement basic month-based filtering
+4. Enhance expense display with user details
+5. Add share details modal
+6. Set up email notification foundation 

@@ -225,9 +225,8 @@ export default function GroupPage() {
             title="Add New Expense"
           >
             <ExpenseForm
-              group={group}
-              onSubmit={handleAddExpense}
-              onClose={() => setIsAddExpenseModalOpen(false)}
+              groupId={groupId}
+              onSuccess={() => setIsAddExpenseModalOpen(false)}
             />
           </Modal>
 

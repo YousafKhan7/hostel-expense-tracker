@@ -6,11 +6,10 @@ export default function CustomSplitInput({
   totalAmount, 
   selectedMembers, 
   onSplitChange,
-  initialShares = {},
   currentUserId
 }) {
   const { user } = useAuth();
-  const [shares, setShares] = useState(initialShares);
+  const [shares, setShares] = useState({});
   const [remainingAmount, setRemainingAmount] = useState(totalAmount);
   const [error, setError] = useState('');
 
