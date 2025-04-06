@@ -39,9 +39,7 @@ export default function BalanceDisplay({ group, expenses }) {
       }
     };
 
-    if (group?.members) {
-      fetchMemberProfiles();
-    }
+    fetchMemberProfiles();
   }, [group?.members]);
 
   // Calculate balances
@@ -107,34 +105,37 @@ export default function BalanceDisplay({ group, expenses }) {
             <li key={memberId} className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                      <span className="text-primary-800 font-medium">
-                        {(memberProfiles[memberId]?.name?.[0] || '?').toUpperCase()}
-                      </span>
-                    </div>
+                  <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
+                    <span className="text-primary-800 font-medium">
+                      {(memberProfiles[memberId]?.name?.[0] || '?').toUpperCase()}
+                    </span>
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-900">
                       {getDisplayName(memberId)}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {memberProfiles[memberId]?.email}
+                      {memberProfiles[memberId]?.email || 'No email available'}
                     </p>
                   </div>
                 </div>
-                <div className={`text-sm font-medium ${
-                  balance > 0 
-                    ? 'text-green-600' 
-                    : balance < 0 
-                      ? 'text-red-600' 
-                      : 'text-gray-500'
-                }`}>
-                  {balance === 0 
-                    ? 'Settled'
-                    : balance > 0
-                      ? `Gets back ${formatAmount(balance)}`
-                      : `Owes ${formatAmount(balance)}`}
+                <div className="flex flex-col items-end">
+                  <div className={`text-sm font-medium ${
+                    balance > 0 
+                      ? 'text-green-600' 
+                      : balance < 0 
+                        ? 'text-red-600' 
+                        : 'text-gray-500'
+                  }`}>
+                    {balance === 0 
+                      ? 'Settled'
+                      : balance > 0
+                        ? `Gets back ${formatAmount(balance)}`
+                        : `Owes ${formatAmount(balance)}`}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Total spent: ${balanceData.totalSpentByMember[memberId]?.toFixed(2) || '0.00'}
+                  </div>
                 </div>
               </div>
             </li>
@@ -146,18 +147,23 @@ export default function BalanceDisplay({ group, expenses }) {
       {!balanceData.summary.isSettled && (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Suggested Settlements</h3>
+            <h3 className="text-lg font-medium text-gray-900">Detailed Settlements</h3>
           </div>
           <ul className="divide-y divide-gray-200">
             {balanceData.settlements.map((settlement, index) => (
               <li key={index} className="px-6 py-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-900">
-                    <span className="font-medium">{getDisplayName(settlement.from)}</span>
-                    {' pays '}
-                    <span className="font-medium">{getDisplayName(settlement.to)}</span>
-                  </p>
-                  <p className="text-sm font-medium text-primary-600">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-900">
+                      <span className="font-medium">{getDisplayName(settlement.from)}</span>
+                      {' owes '}
+                      <span className="font-medium">{getDisplayName(settlement.to)}</span>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {memberProfiles[settlement.from]?.email} → {memberProfiles[settlement.to]?.email}
+                    </p>
+                  </div>
+                  <p className="text-sm font-medium text-primary-600 ml-4">
                     {formatAmount(settlement.amount)}
                   </p>
                 </div>

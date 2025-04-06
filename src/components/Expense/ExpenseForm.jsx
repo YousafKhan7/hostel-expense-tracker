@@ -16,16 +16,14 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
   const [customShares, setCustomShares] = useState({});
   const { user } = useAuth();
 
-  // Initialize selected members with all group members
+  // Initialize selected members with all group members except current user
   useEffect(() => {
     if (group?.members) {
-      const initialSelected = [];
-      Object.keys(group.members).forEach(memberId => {
-        initialSelected.push(memberId);
-      });
+      const initialSelected = Object.keys(group.members)
+        .filter(memberId => memberId !== user.uid);
       setSelectedMembers(initialSelected);
     }
-  }, [group?.members]);
+  }, [group?.members, user.uid]);
 
   // Calculate and validate split amounts
   useEffect(() => {
@@ -184,6 +182,22 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
     }
   };
 
+  const handleCustomShareChange = (shares) => {
+    setCustomShares(shares);
+    // Auto-select members who have amounts assigned
+    const membersWithShares = Object.entries(shares)
+      .filter(([_, amount]) => amount > 0)
+      .map(([memberId]) => memberId);
+    
+    // Always include members who already had shares
+    const updatedSelection = Array.from(new Set([
+      ...selectedMembers.filter(id => shares[id] > 0),
+      ...membersWithShares
+    ]));
+    
+    setSelectedMembers(updatedSelection);
+  };
+
   if (loading) {
     return (
       <div className="animate-pulse">
@@ -239,59 +253,62 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Split With
-        </label>
-        <div className="bg-white rounded-lg border border-gray-200">
-          <ul className="divide-y divide-gray-200">
-            {Object.entries(group.members).map(([memberId, member]) => (
-              memberId !== user.uid && (
-                <li key={memberId} className="px-4 py-3">
-                  <div className="relative flex items-start">
-                    <div className="flex items-center h-5">
-                      <input
-                        type="checkbox"
-                        checked={selectedMembers.includes(memberId)}
-                        onChange={() => handleMemberToggle(memberId)}
-                        className="h-4 w-4 text-primary-600 rounded border-gray-300"
-                      />
-                    </div>
-                    <div className="ml-3 flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-sm font-medium text-primary-800">
-                          {(member.name?.[0] || '?').toUpperCase()}
-                        </span>
+      <SplitTypeSelector
+        value={splitType}
+        onChange={handleSplitTypeChange}
+      />
+
+      {splitType === 'equal' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Split With
+          </label>
+          <div className="bg-white rounded-lg border border-gray-200">
+            <ul className="divide-y divide-gray-200">
+              {Object.entries(group.members).map(([memberId, member]) => (
+                memberId !== user.uid && (
+                  <li key={memberId} className="px-4 py-3">
+                    <div className="relative flex items-start">
+                      <div className="flex items-center h-5">
+                        <input
+                          type="checkbox"
+                          checked={selectedMembers.includes(memberId)}
+                          onChange={() => handleMemberToggle(memberId)}
+                          className="h-4 w-4 text-primary-600 rounded border-gray-300"
+                        />
                       </div>
-                      <span className="ml-2 text-sm font-medium text-gray-900">
-                        {member.name || 'Unknown User'}
-                      </span>
+                      <div className="ml-3 flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                          <span className="text-sm font-medium text-primary-800">
+                            {(memberProfiles[memberId]?.name?.[0] || '?').toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="ml-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            {memberProfiles[memberId]?.name || 'Unknown User'}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {memberProfiles[memberId]?.email || 'No email available'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              )
-            ))}
-          </ul>
+                  </li>
+                )
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
 
-      {selectedMembers.length > 0 && (
-        <>
-          <SplitTypeSelector
-            value={splitType}
-            onChange={handleSplitTypeChange}
-          />
-
-          {splitType === 'custom' && amount && (
-            <CustomSplitInput
-              members={group.members}
-              totalAmount={parseFloat(amount)}
-              selectedMembers={selectedMembers}
-              onSplitChange={setCustomShares}
-              initialShares={customShares}
-            />
-          )}
-        </>
+      {splitType === 'custom' && amount && (
+        <CustomSplitInput
+          members={memberProfiles}
+          totalAmount={parseFloat(amount)}
+          selectedMembers={Object.keys(group.members).filter(id => id !== user.uid)}
+          onSplitChange={handleCustomShareChange}
+          initialShares={customShares}
+        />
       )}
 
       <div className="flex justify-end space-x-3">

@@ -14,14 +14,17 @@ export class BalanceCalculator {
         individualBalances: {},
         settlements: [],
         totalExpenses: 0,
+        totalSpentByMember: {},
         summary: this.createBalanceSummary({})
       };
     }
 
-    // Initialize balances for all members
+    // Initialize balances and total spent for all members
     const balances = {};
+    const totalSpentByMember = {};
     Object.keys(members).forEach(memberId => {
       balances[memberId] = 0;
+      totalSpentByMember[memberId] = 0;
     });
 
     // Calculate raw balances from expenses
@@ -36,6 +39,7 @@ export class BalanceCalculator {
       
       // Add the full amount to payer's balance (positive = should receive money)
       balances[paidBy] = (balances[paidBy] || 0) + amount;
+      totalSpentByMember[paidBy] = (totalSpentByMember[paidBy] || 0) + amount;
 
       // Subtract each person's share (negative = should pay money)
       Object.entries(shares || {}).forEach(([memberId, share]) => {
@@ -48,6 +52,7 @@ export class BalanceCalculator {
     // Round all balances to 2 decimal places
     Object.keys(balances).forEach(memberId => {
       balances[memberId] = Math.round(balances[memberId] * 100) / 100;
+      totalSpentByMember[memberId] = Math.round(totalSpentByMember[memberId] * 100) / 100;
     });
 
     // Calculate simplified settlements
@@ -57,6 +62,7 @@ export class BalanceCalculator {
       individualBalances: balances,
       settlements: settlements,
       totalExpenses: expenses.reduce((sum, exp) => sum + (exp?.amount || 0), 0),
+      totalSpentByMember,
       summary: this.createBalanceSummary(balances)
     };
   }
@@ -68,46 +74,39 @@ export class BalanceCalculator {
    */
   static calculateSettlements(balances) {
     const settlements = [];
-    const debtors = []; // People who owe money (negative balance)
-    const creditors = []; // People who should receive money (positive balance)
+    const debtors = [];
+    const creditors = [];
 
     // Separate members into debtors and creditors
     Object.entries(balances).forEach(([memberId, balance]) => {
-      if (balance < -0.01) { // Using -0.01 to handle floating point imprecision
-        debtors.push({ id: memberId, amount: -balance });
-      } else if (balance > 0.01) {
+      if (balance < 0) {
+        debtors.push({ id: memberId, amount: Math.abs(balance) });
+      } else if (balance > 0) {
         creditors.push({ id: memberId, amount: balance });
       }
     });
 
-    // Sort by amount (largest first) to minimize number of transactions
+    // Sort by amount (largest first)
     debtors.sort((a, b) => b.amount - a.amount);
     creditors.sort((a, b) => b.amount - a.amount);
 
-    // Calculate settlements
+    // Create settlements
     while (debtors.length > 0 && creditors.length > 0) {
       const debtor = debtors[0];
       const creditor = creditors[0];
-      
-      // Calculate transaction amount
       const amount = Math.min(debtor.amount, creditor.amount);
-      
-      // Round to 2 decimal places
-      const roundedAmount = Math.round(amount * 100) / 100;
-      
-      if (roundedAmount > 0) {
+
+      if (amount > 0) {
         settlements.push({
           from: debtor.id,
           to: creditor.id,
-          amount: roundedAmount
+          amount: Math.round(amount * 100) / 100
         });
       }
 
-      // Update remaining balances
       debtor.amount -= amount;
       creditor.amount -= amount;
 
-      // Remove settled members
       if (debtor.amount < 0.01) debtors.shift();
       if (creditor.amount < 0.01) creditors.shift();
     }
@@ -121,27 +120,27 @@ export class BalanceCalculator {
    * @returns {Object} Summary information
    */
   static createBalanceSummary(balances) {
-    let totalPositive = 0;
-    let totalNegative = 0;
-    let maxDebt = 0;
-    let maxCredit = 0;
+    const summary = {
+      totalPositive: 0,
+      totalNegative: 0,
+      maxDebt: 0,
+      maxCredit: 0,
+      isSettled: true
+    };
 
     Object.values(balances).forEach(balance => {
       if (balance > 0) {
-        totalPositive += balance;
-        maxCredit = Math.max(maxCredit, balance);
+        summary.totalPositive += balance;
+        summary.maxCredit = Math.max(summary.maxCredit, balance);
       } else if (balance < 0) {
-        totalNegative += Math.abs(balance);
-        maxDebt = Math.max(maxDebt, Math.abs(balance));
+        summary.totalNegative += Math.abs(balance);
+        summary.maxDebt = Math.max(summary.maxDebt, Math.abs(balance));
+      }
+      if (Math.abs(balance) > 0.01) {
+        summary.isSettled = false;
       }
     });
 
-    return {
-      totalPositive: Math.round(totalPositive * 100) / 100,
-      totalNegative: Math.round(totalNegative * 100) / 100,
-      maxDebt: Math.round(maxDebt * 100) / 100,
-      maxCredit: Math.round(maxCredit * 100) / 100,
-      isSettled: Math.abs(totalPositive - totalNegative) < 0.01
-    };
+    return summary;
   }
 } 
