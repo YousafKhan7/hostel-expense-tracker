@@ -28,13 +28,14 @@
 - [ ] Group categories/tags
 
 ## Current Focus
-- Implementing expense categories and attachments
-- Enhancing group management features
+- Implementing custom split functionality
+- Enhancing expense management features
 
 ## Next Steps
-1. Add expense categories and tags
-2. Implement file upload for expense attachments
-3. Add group settings and management features
+1. Implement custom split UI and logic
+2. Add expense categories and tags
+3. Add expense attachments
+4. Enhance group management features
 
 ## Technical Debt
 - Add error boundaries for component failures

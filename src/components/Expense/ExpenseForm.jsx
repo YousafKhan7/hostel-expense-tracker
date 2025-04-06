@@ -2,24 +2,26 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../services/firebaseConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import SplitTypeSelector from './SplitTypeSelector';
+import CustomSplitInput from './CustomSplitInput';
 
 export default function ExpenseForm({ group, onSubmit, onClose }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [splitType, setSplitType] = useState('EQUAL');
-  const [selectedMembers, setSelectedMembers] = useState({});
+  const [splitType, setSplitType] = useState('equal');
+  const [selectedMembers, setSelectedMembers] = useState([]);
   const [memberProfiles, setMemberProfiles] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [splitSummary, setSplitSummary] = useState(null);
+  const [customShares, setCustomShares] = useState({});
   const { user } = useAuth();
 
   // Initialize selected members with all group members
   useEffect(() => {
     if (group?.members) {
-      const initialSelected = {};
+      const initialSelected = [];
       Object.keys(group.members).forEach(memberId => {
-        initialSelected[memberId] = true;
+        initialSelected.push(memberId);
       });
       setSelectedMembers(initialSelected);
     }
@@ -28,56 +30,33 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
   // Calculate and validate split amounts
   useEffect(() => {
     if (!amount || isNaN(parseFloat(amount))) {
-      setSplitSummary(null);
+      setCustomShares({});
       return;
     }
 
     const amountValue = parseFloat(amount);
-    const selectedCount = Object.values(selectedMembers).filter(Boolean).length;
+    const selectedCount = selectedMembers.length;
 
     if (selectedCount === 0) {
-      setSplitSummary({
-        isValid: false,
-        message: 'Select at least one member',
-        shares: {}
-      });
+      setCustomShares({});
       return;
     }
 
-    if (splitType === 'EQUAL') {
-      const shareAmount = amountValue / selectedCount;
-      const roundedShareAmount = Math.round(shareAmount * 100) / 100; // Round to 2 decimal places
+    if (splitType === 'equal') {
+      const shareAmount = Math.floor((amountValue / selectedCount) * 100) / 100;
+      const totalShares = shareAmount * (selectedCount - 1);
       
-      // Calculate total after rounding to check for discrepancies
-      const totalAfterRounding = roundedShareAmount * selectedCount;
-      const roundingDiff = Math.abs(amountValue - totalAfterRounding);
-
       const shares = {};
-      const selectedMemberIds = Object.entries(selectedMembers)
-        .filter(([_, isSelected]) => isSelected)
-        .map(([memberId]) => memberId);
-
-      // Distribute shares with rounding adjustment
-      selectedMemberIds.forEach((memberId, index) => {
-        if (index === selectedMemberIds.length - 1) {
-          // Last member gets the remaining amount to handle rounding
-          const sumSoFar = roundedShareAmount * (selectedCount - 1);
-          shares[memberId] = Math.round((amountValue - sumSoFar) * 100) / 100;
+      selectedMembers.forEach((memberId, index) => {
+        // Last member gets the remaining amount to handle rounding
+        if (index === selectedCount - 1) {
+          shares[memberId] = Math.round((amountValue - totalShares) * 100) / 100;
         } else {
-          shares[memberId] = roundedShareAmount;
+          shares[memberId] = shareAmount;
         }
       });
 
-      setSplitSummary({
-        isValid: true,
-        message: roundingDiff > 0.01 
-          ? `Split equally • $${roundedShareAmount.toFixed(2)} each (adjusted for rounding)`
-          : `Split equally • $${roundedShareAmount.toFixed(2)} each`,
-        shares,
-        totalAmount: amountValue,
-        shareAmount: roundedShareAmount,
-        selectedCount
-      });
+      setCustomShares(shares);
     }
   }, [amount, selectedMembers, splitType]);
 
@@ -114,35 +93,95 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate inputs
     if (!description.trim()) {
       setError('Description is required');
       return;
     }
 
-    const amountValue = parseFloat(amount);
-    if (isNaN(amountValue) || amountValue <= 0) {
+    const expenseAmount = parseFloat(amount);
+    if (!expenseAmount || expenseAmount <= 0) {
       setError('Please enter a valid amount');
       return;
     }
 
-    if (!splitSummary?.isValid) {
-      setError(splitSummary?.message || 'Invalid split configuration');
+    if (selectedMembers.length === 0) {
+      setError('Please select at least one member');
       return;
     }
 
-    onSubmit({
+    // Calculate shares based on split type
+    let shares = {};
+    if (splitType === 'equal') {
+      const shareAmount = Math.floor((expenseAmount / selectedMembers.length) * 100) / 100;
+      const totalShares = shareAmount * (selectedMembers.length - 1);
+      
+      selectedMembers.forEach((memberId, index) => {
+        // Last member gets the remaining amount to handle rounding
+        if (index === selectedMembers.length - 1) {
+          shares[memberId] = Math.round((expenseAmount - totalShares) * 100) / 100;
+        } else {
+          shares[memberId] = shareAmount;
+        }
+      });
+    } else {
+      // Validate custom shares
+      const totalShares = Object.values(customShares).reduce((sum, share) => sum + (share || 0), 0);
+      if (Math.abs(totalShares - expenseAmount) > 0.01) {
+        setError('The sum of shares must equal the total amount');
+        return;
+      }
+      shares = customShares;
+    }
+
+    const expense = {
       description: description.trim(),
-      amount: amountValue,
+      amount: expenseAmount,
       splitType,
-      splitAmong: Object.entries(selectedMembers)
-        .filter(([_, isSelected]) => isSelected)
-        .map(([memberId]) => memberId),
-      shares: splitSummary.shares,
       paidBy: user.uid,
+      shares,
       createdAt: new Date(),
       updatedAt: new Date()
+    };
+
+    onSubmit(expense);
+  };
+
+  const handleMemberToggle = (memberId) => {
+    setSelectedMembers(prev => {
+      const newSelection = prev.includes(memberId)
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId];
+      
+      // Update shares when members change
+      if (splitType === 'equal') {
+        const shareAmount = amount ? Math.floor((parseFloat(amount) / newSelection.length) * 100) / 100 : 0;
+        const shares = {};
+        newSelection.forEach(id => {
+          shares[id] = shareAmount;
+        });
+        setCustomShares(shares);
+      } else {
+        // For custom split, initialize new member with 0
+        setCustomShares(prev => ({
+          ...prev,
+          [memberId]: prev[memberId] || 0
+        }));
+      }
+
+      return newSelection;
     });
+  };
+
+  const handleSplitTypeChange = (type) => {
+    setSplitType(type);
+    if (type === 'equal' && selectedMembers.length > 0) {
+      const shareAmount = amount ? Math.floor((parseFloat(amount) / selectedMembers.length) * 100) / 100 : 0;
+      const shares = {};
+      selectedMembers.forEach(id => {
+        shares[id] = shareAmount;
+      });
+      setCustomShares(shares);
+    }
   };
 
   if (loading) {
@@ -175,7 +214,7 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
           className="input mt-1"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="What was this expense for?"
+          placeholder="Enter expense description"
         />
       </div>
 
@@ -183,118 +222,91 @@ export default function ExpenseForm({ group, onSubmit, onClose }) {
         <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
           Amount
         </label>
-        <input
-          type="number"
-          id="amount"
-          className="input mt-1"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="0.00"
-          step="0.01"
-          min="0"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Split Type
-        </label>
-        <div className="flex space-x-4">
-          <button
-            type="button"
-            className={`px-4 py-2 rounded-md ${
-              splitType === 'EQUAL'
-                ? 'bg-primary-100 text-primary-800 border-2 border-primary-500'
-                : 'bg-gray-100 text-gray-800 border-2 border-transparent'
-            }`}
-            onClick={() => setSplitType('EQUAL')}
-          >
-            Split Equally
-          </button>
-          <button
-            type="button"
-            className={`px-4 py-2 rounded-md ${
-              splitType === 'CUSTOM'
-                ? 'bg-primary-100 text-primary-800 border-2 border-primary-500'
-                : 'bg-gray-100 text-gray-800 border-2 border-transparent opacity-50 cursor-not-allowed'
-            }`}
-            disabled={true}
-            title="Coming soon"
-          >
-            Custom Split
-          </button>
+        <div className="relative mt-1">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 sm:text-sm">$</span>
+          </div>
+          <input
+            type="number"
+            id="amount"
+            className="input pl-7"
+            min="0"
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+          />
         </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Split Between
+          Split With
         </label>
-        <div className="space-y-2 max-h-48 overflow-y-auto">
-          {Object.entries(group.members).map(([memberId, memberData]) => {
-            const profile = memberProfiles[memberId];
-            const isCurrentUser = memberId === user.uid;
-            const shareAmount = splitSummary?.shares[memberId];
-
-            return (
-              <div key={memberId} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`member-${memberId}`}
-                    className="h-4 w-4 text-primary-600 rounded border-gray-300"
-                    checked={selectedMembers[memberId]}
-                    onChange={(e) => {
-                      setSelectedMembers(prev => ({
-                        ...prev,
-                        [memberId]: e.target.checked
-                      }));
-                    }}
-                  />
-                  <label htmlFor={`member-${memberId}`} className="ml-2 block text-sm text-gray-900">
-                    {isCurrentUser ? 'You' : profile.name}
-                    <span className="text-xs text-gray-500 ml-1">
-                      ({profile.email})
-                    </span>
-                  </label>
-                </div>
-                {shareAmount && selectedMembers[memberId] && (
-                  <span className="text-sm text-gray-600">
-                    ${shareAmount.toFixed(2)}
-                  </span>
-                )}
-              </div>
-            );
-          })}
+        <div className="bg-white rounded-lg border border-gray-200">
+          <ul className="divide-y divide-gray-200">
+            {Object.entries(group.members).map(([memberId, member]) => (
+              memberId !== user.uid && (
+                <li key={memberId} className="px-4 py-3">
+                  <div className="relative flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        type="checkbox"
+                        checked={selectedMembers.includes(memberId)}
+                        onChange={() => handleMemberToggle(memberId)}
+                        className="h-4 w-4 text-primary-600 rounded border-gray-300"
+                      />
+                    </div>
+                    <div className="ml-3 flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                        <span className="text-sm font-medium text-primary-800">
+                          {(member.name?.[0] || '?').toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="ml-2 text-sm font-medium text-gray-900">
+                        {member.name || 'Unknown User'}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              )
+            ))}
+          </ul>
         </div>
       </div>
 
-      {splitSummary && (
-        <div className={`rounded-md p-4 ${
-          splitSummary.isValid ? 'bg-green-50' : 'bg-yellow-50'
-        }`}>
-          <p className={`text-sm ${
-            splitSummary.isValid ? 'text-green-700' : 'text-yellow-700'
-          }`}>
-            {splitSummary.message}
-          </p>
-        </div>
+      {selectedMembers.length > 0 && (
+        <>
+          <SplitTypeSelector
+            value={splitType}
+            onChange={handleSplitTypeChange}
+          />
+
+          {splitType === 'custom' && amount && (
+            <CustomSplitInput
+              members={group.members}
+              totalAmount={parseFloat(amount)}
+              selectedMembers={selectedMembers}
+              onSplitChange={setCustomShares}
+              initialShares={customShares}
+            />
+          )}
+        </>
       )}
 
-      <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-        <button
-          type="submit"
-          className="btn btn-primary w-full sm:w-auto sm:ml-3"
-          disabled={!splitSummary?.isValid}
-        >
-          Add Expense
-        </button>
+      <div className="flex justify-end space-x-3">
         <button
           type="button"
-          className="btn btn-secondary mt-3 sm:mt-0 w-full sm:w-auto"
           onClick={onClose}
+          className="btn btn-secondary"
         >
           Cancel
+        </button>
+        <button
+          type="submit"
+          className="btn btn-primary"
+        >
+          Add Expense
         </button>
       </div>
     </form>
