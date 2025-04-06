@@ -5,6 +5,7 @@ import { db } from '../services/firebaseConfig';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Common/Modal';
 import MemberList from '../components/Group/MemberList';
+import ExpenseForm from '../components/Expense/ExpenseForm';
 
 export default function GroupPage() {
   const { groupId } = useParams();
@@ -67,56 +68,16 @@ export default function GroupPage() {
     return () => unsubscribe();
   }, [groupId, user, navigate]);
 
-  const handleAddExpense = async (e) => {
-    e.preventDefault();
-    
-    if (!newExpense.description.trim() || !newExpense.amount) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    const amount = parseFloat(newExpense.amount);
-    if (isNaN(amount) || amount <= 0) {
-      setError('Please enter a valid amount');
-      return;
-    }
-
-    if (newExpense.splitAmong.length === 0) {
-      setError('Please select at least one member to split with');
-      return;
-    }
-
+  const handleAddExpense = async (expenseData) => {
     try {
-      // Calculate equal shares
-      const shareAmount = amount / newExpense.splitAmong.length;
-      const shares = {};
-      newExpense.splitAmong.forEach(memberId => {
-        shares[memberId] = shareAmount;
-      });
-
       await addDoc(collection(db, 'expenses'), {
-        groupId,
-        description: newExpense.description.trim(),
-        amount,
-        paidBy: user.uid,
-        splitAmong: newExpense.splitAmong,
-        splitType: 'EQUAL',
-        shares,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        createdBy: user.uid
+        ...expenseData,
+        groupId: groupId
       });
-
       setIsAddExpenseModalOpen(false);
-      setNewExpense({
-        description: '',
-        amount: '',
-        splitType: 'EQUAL',
-        splitAmong: group.members,
-        shares: {}
-      });
     } catch (error) {
-      setError('Failed to add expense. Please try again.');
+      console.error('Error adding expense:', error);
+      // Error will be handled by the ExpenseForm component
     }
   };
 
@@ -249,95 +210,20 @@ export default function GroupPage() {
 
             {/* Members Section - 1/3 width on large screens */}
             <div className="lg:col-span-1">
-d               <MemberList group={group} />
+              <MemberList group={group} />
             </div>
           </div>
 
           <Modal
             isOpen={isAddExpenseModalOpen}
-            onClose={() => {
-              setIsAddExpenseModalOpen(false);
-              setError('');
-              setNewExpense({
-                description: '',
-                amount: '',
-                splitType: 'EQUAL',
-                splitAmong: group?.members || [],
-                shares: {}
-              });
-            }}
+            onClose={() => setIsAddExpenseModalOpen(false)}
             title="Add New Expense"
           >
-            <form onSubmit={handleAddExpense}>
-              {error && (
-                <div className="rounded-md bg-red-50 p-4 mb-4">
-                  <div className="text-sm text-red-700">{error}</div>
-                </div>
-              )}
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    id="description"
-                    className="input mt-1"
-                    value={newExpense.description}
-                    onChange={(e) => setNewExpense(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="What was this expense for?"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    id="amount"
-                    step="0.01"
-                    min="0"
-                    className="input mt-1"
-                    value={newExpense.amount}
-                    onChange={(e) => setNewExpense(prev => ({ ...prev, amount: e.target.value }))}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Split Among
-                  </label>
-                  <p className="text-sm text-gray-500 mb-2">
-                    Currently split equally among all members
-                  </p>
-                </div>
-              </div>
-              <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <button
-                  type="submit"
-                  className="btn btn-primary w-full sm:w-auto sm:ml-3"
-                >
-                  Add Expense
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary mt-3 sm:mt-0 w-full sm:w-auto"
-                  onClick={() => {
-                    setIsAddExpenseModalOpen(false);
-                    setError('');
-                    setNewExpense({
-                      description: '',
-                      amount: '',
-                      splitType: 'EQUAL',
-                      splitAmong: group?.members || [],
-                      shares: {}
-                    });
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+            <ExpenseForm
+              group={group}
+              onSubmit={handleAddExpense}
+              onClose={() => setIsAddExpenseModalOpen(false)}
+            />
           </Modal>
 
           <Modal

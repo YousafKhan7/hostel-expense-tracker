@@ -27,8 +27,8 @@
 - [x] Update expense data model
 - [x] Update Firestore expense document
 - [x] Enhance expense display
-- [ ] Add split member selection
-- [ ] Add split type selection
+- [x] Add split member selection
+- [x] Add split type selection (Equal splits implemented, Custom splits prepared)
 - [ ] Implement split amount validation
 
 ### Step 4: Balance Calculation
@@ -59,4 +59,4 @@
 - [ ] Implement settlement verification
 
 ## Current Focus
-Currently working on: Phase 1, Step 3 - Enhancing Expense Functionality 
+Currently working on: Phase 1, Step 3 - Split Amount Validation 
