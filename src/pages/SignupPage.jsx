@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../services/firebaseConfig';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,6 +17,10 @@ export default function SignupPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (!name.trim()) {
+      return setError('Name is required');
+    }
 
     if (password !== confirmPassword) {
       return setError('Passwords do not match');
@@ -27,8 +34,16 @@ export default function SignupPage() {
       setError('');
       setLoading(true);
       const result = await signup(email, password);
+      
+      // Create user profile in Firestore
+      await setDoc(doc(db, 'users', result.user.uid), {
+        email: email,
+        name: name.trim(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
       setVerificationSent(true);
-      // Wait for 2 seconds to show verification message before redirecting
       setTimeout(() => {
         navigate('/dashboard');
       }, 2000);
@@ -63,9 +78,19 @@ export default function SignupPage() {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <input
-                type="email"
+                type="text"
                 required
                 className="input rounded-t-md"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div>
+              <input
+                type="email"
+                required
+                className="input"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -75,7 +100,7 @@ export default function SignupPage() {
               <input
                 type="password"
                 required
-                className="input rounded-none"
+                className="input"
                 placeholder="Password (min. 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

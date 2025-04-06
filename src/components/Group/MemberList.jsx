@@ -18,7 +18,10 @@ export default function MemberList({ members, groupCreator }) {
             profiles[memberId] = userDoc.data();
           } else {
             // If no profile exists, use email from auth
-            profiles[memberId] = { email: 'Unknown User' };
+            profiles[memberId] = { 
+              name: 'Unknown User',
+              email: 'No email available'
+            };
           }
         }
         setMemberProfiles(profiles);
@@ -54,6 +57,7 @@ export default function MemberList({ members, groupCreator }) {
           const profile = memberProfiles[memberId] || {};
           const isCreator = memberId === groupCreator;
           const isCurrentUser = memberId === user.uid;
+          const displayName = isCurrentUser ? 'You' : (profile.name || 'Unknown User');
 
           return (
             <li
@@ -64,16 +68,16 @@ export default function MemberList({ members, groupCreator }) {
                 <div className="flex-shrink-0">
                   <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
                     <span className="text-primary-800 font-medium">
-                      {(profile.email?.[0] || '?').toUpperCase()}
+                      {(profile.name?.[0] || '?').toUpperCase()}
                     </span>
                   </div>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {isCurrentUser ? 'You' : profile.email}
+                    {displayName}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {isCreator ? 'Group Admin' : 'Member'}
+                    {profile.email}
                   </p>
                 </div>
               </div>

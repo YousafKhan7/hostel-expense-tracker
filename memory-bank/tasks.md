@@ -2,7 +2,17 @@
 
 ## Phase 1: Implementing Core Group Features & Expense Splitting
 
-### Step 1: Group Member Management
+### Step 1: User Profile & Member Management
+- [x] Implement user profiles
+  - [x] Add name field to signup
+  - [x] Create user profile in Firestore
+  - [x] Display user information in member list
+- [ ] Enhance member management
+  - [ ] Add member role management (admin/member)
+  - [ ] Allow removing members
+  - [ ] Show member join dates
+
+### Step 2: Group Member Management
 - [x] Implement group invitation system
   - [x] Add invite code generation
   - [x] Create join group functionality
@@ -13,27 +23,27 @@
   - [ ] Allow removing members
   - [ ] Show member join dates
 
-### Step 2: Enhance Expense Functionality
+### Step 3: Enhance Expense Functionality
 - [x] Update expense data model
 - [x] Update Firestore expense document
 - [x] Enhance expense display
 - [ ] Add split member selection (after member management)
 - [ ] Add split type selection
 
-### Step 3: Balance Calculation
+### Step 4: Balance Calculation
 - [ ] Implement balance calculation logic
 - [ ] Add balance display UI
 - [ ] Add settlement suggestions
 
 ## Phase 2: Group Management Features
 
-### Step 4: Group Members Display
+### Step 5: Group Members Display
 - [ ] Create member list component
 - [ ] Fetch and display member details
 - [ ] Add member role indicators
 - [ ] Implement member list sorting/filtering
 
-### Step 5: Member Management
+### Step 6: Member Management
 - [ ] Implement add member by email functionality
 - [ ] Create invite system
 - [ ] Add member removal functionality
@@ -41,7 +51,7 @@
 
 ## Phase 3: Settlement Features
 
-### Step 6: Payment Recording
+### Step 7: Payment Recording
 - [ ] Create payment recording UI
 - [ ] Implement payment data model
 - [ ] Add payment history tracking
