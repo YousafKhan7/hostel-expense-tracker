@@ -17,6 +17,8 @@
   - Member selection
   - Equal splits
   - Split type UI (Custom splits prepared)
+  - Split amount validation
+  - Real-time split feedback
 
 ## In Progress
 ### Phase 1: Expense Splitting
@@ -25,11 +27,12 @@
 - ✅ Basic expense display with split info
 - ✅ Split member selection
 - ✅ Split type selection (Equal)
-- 🔄 Implementing split amount validation
+- ✅ Split amount validation
+- 🔄 Implementing balance calculation
 
 ## Upcoming
 - Custom split implementation
-- Balance Calculation
+- Balance Display
 - Payment Recording
 - Settlement System
 
@@ -38,9 +41,9 @@
 - Implement loading states for expense operations
 - Add form validation for split selections
 - Improve split UI/UX feedback
-- Add split amount validation
 - Add confirmation dialogs for member removal
 - Add custom split UI and validation
+- Handle currency conversion (future)
 
 ## Testing Status
 - ✅ Authentication Flow
@@ -48,8 +51,8 @@
 - ✅ Basic Expense Management
 - ✅ Member Management
 - ✅ Equal Split Implementation
-- ⏳ Split Amount Validation
-- ❌ Balance Calculation
+- ✅ Split Amount Validation
+- 🔄 Balance Calculation
 - ❌ Settlement System
 
 ## Deployment Status
@@ -59,10 +62,10 @@
 
 ## Known Issues
 1. Custom splits not yet implemented
-2. Split amount validation needed
-3. Need better split summary display
+2. Need better split summary display
+3. Currency handling needs improvement
 
 ## Next Actions
-1. Implement split amount validation
-2. Enhance split summary display
-3. Prepare for balance calculation implementation 
+1. Implement balance calculation logic
+2. Design balance display UI
+3. Plan settlement system 

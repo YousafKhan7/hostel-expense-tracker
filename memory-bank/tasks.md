@@ -23,15 +23,15 @@
   - [x] Allow removing members
   - [x] Show member join dates
 
-### Step 3: Enhance Expense Functionality (Current Focus)
+### Step 3: Enhance Expense Functionality
 - [x] Update expense data model
 - [x] Update Firestore expense document
 - [x] Enhance expense display
 - [x] Add split member selection
 - [x] Add split type selection (Equal splits implemented, Custom splits prepared)
-- [ ] Implement split amount validation
+- [x] Implement split amount validation
 
-### Step 4: Balance Calculation
+### Step 4: Balance Calculation (Current Focus)
 - [ ] Implement balance calculation logic
 - [ ] Add balance display UI
 - [ ] Add settlement suggestions
@@ -59,4 +59,4 @@
 - [ ] Implement settlement verification
 
 ## Current Focus
-Currently working on: Phase 1, Step 3 - Split Amount Validation 
+Currently working on: Phase 1, Step 4 - Balance Calculation 
