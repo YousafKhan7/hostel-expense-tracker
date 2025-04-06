@@ -1,0 +1,16 @@
+{
+  "name": "Shared Expense Tracker",
+  "short_name": "Expenses",
+  "description": "Track and split expenses with friends and family",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+} 
