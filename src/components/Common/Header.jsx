@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -6,6 +6,7 @@ export default function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   const handleLogout = async () => {
     try {
@@ -20,16 +21,35 @@ export default function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  // Handle clicks outside the menu to close it
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    // Add event listener when the menu is open
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Clean up the event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   return (
     <header className="bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex justify-between items-center">
           <Link to="/dashboard" className="text-xl font-bold text-primary-600">
-            Hostel Expense Tracker
+            SplitIt
           </Link>
 
           {user && (
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
                 onClick={toggleMenu}
                 className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-none"
