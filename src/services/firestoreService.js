@@ -9,24 +9,36 @@ import { getMonthKey, getMonthBoundaries } from '../utils/ExpenseSchema';
  * @param {Object} data - The data to update
  */
 export const updateMonthlyData = async (groupId, monthKey, data) => {
-  const monthlyRef = doc(db, 'monthlyData', `${groupId}_${monthKey}`);
-  const monthDoc = await getDoc(monthlyRef);
-
-  if (!monthDoc.exists()) {
-    await setDoc(monthlyRef, {
-      groupId,
-      monthKey,
-      totalExpenses: 0,
-      memberBalances: {},
-      settlements: [],
-      lastUpdated: new Date(),
-      ...data
-    });
-  } else {
-    await updateDoc(monthlyRef, {
-      ...data,
-      lastUpdated: new Date()
-    });
+  try {
+    const monthlyRef = doc(db, 'monthlyData', `${groupId}_${monthKey}`);
+    const monthDoc = await getDoc(monthlyRef);
+    
+    if (!monthDoc.exists()) {
+      // Create new document
+      await setDoc(monthlyRef, {
+        groupId,
+        month: monthKey,
+        totalExpenses: data.totalExpenses || 0,
+        memberBalances: data.memberBalances || {},
+        reportGenerated: data.reportGenerated || false,
+        reportUrl: data.reportUrl || null,
+        lastExpenseId: data.lastExpenseId || null,
+        settlements: data.settlements || [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    } else {
+      // Update existing document
+      await updateDoc(monthlyRef, {
+        ...data,
+        updatedAt: new Date()
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating monthly data:', error);
+    throw error;
   }
 };
 
@@ -125,4 +137,26 @@ export const getAllMonthlyData = async (groupId) => {
   
   const querySnapshot = await getDocs(monthlyQuery);
   return querySnapshot.docs.map(doc => doc.data());
+};
+
+/**
+ * Updates the report status for a month
+ * @param {string} groupId - The ID of the group
+ * @param {string} monthKey - The month key in YYYY-MM format
+ * @param {boolean} reportGenerated - Whether the report was generated
+ * @param {string} reportUrl - URL to the generated report (optional)
+ */
+export const updateReportStatus = async (groupId, monthKey, reportGenerated, reportUrl = null) => {
+  try {
+    await updateMonthlyData(groupId, monthKey, {
+      reportGenerated,
+      reportUrl,
+      reportGeneratedAt: reportGenerated ? new Date() : null
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating report status:', error);
+    throw error;
+  }
 }; 

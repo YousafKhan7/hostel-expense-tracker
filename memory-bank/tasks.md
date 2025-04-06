@@ -20,7 +20,11 @@
 - [x] Monthly Calendar System
   - [x] Month-wise expense grouping
   - [x] Monthly total calculations
-  - [ ] Monthly report generation
+  - [x] Monthly report generation
+    - [x] PDF report creation
+    - [x] Member summary
+    - [x] Expense details
+    - [ ] Report storage
   - [ ] Monthly email notifications
   - [x] Zero balance start for new months
   - [x] Robust date handling and timezone fixes
@@ -39,7 +43,7 @@
 - [ ] Group categories/tags
 
 ## Current Focus
-- Implementing Monthly Report Generation
+- Implementing Monthly Report Generation ✓
 - Setting up Email Notification System
 - Adding Expense Categories
 
@@ -48,7 +52,11 @@
 2. [x] Add monthly totals and filtering
 3. [x] Enhance expense display with user details
 4. [x] Add member share details popup
-5. [ ] Implement monthly report generation
+5. [x] Implement monthly report generation
+   - [x] PDF generation with jsPDF
+   - [x] Report layout and design
+   - [x] Member summary section
+   - [x] Detailed expense listing
 6. [ ] Set up email notification system
 7. [ ] Add expense categories and tags
 

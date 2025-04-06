@@ -10,6 +10,21 @@ import BalanceDisplay from '../components/Balance/BalanceDisplay';
 import ExpenseList from '../components/Expense/ExpenseList';
 import ExpenseCalendar from '../components/Expense/ExpenseCalendar';
 import { getMonthKey, getMonthBoundaries } from '../utils/ExpenseSchema';
+import { lazy, Suspense } from 'react';
+
+// Lazy load the MonthlyReport component
+const MonthlyReport = lazy(() => import('../components/Report/MonthlyReport'));
+
+// Simple loading component for the report
+const ReportLoading = () => (
+  <div className="bg-white rounded-lg shadow p-4">
+    <h3 className="text-lg font-medium text-gray-900">Monthly Report</h3>
+    <p className="text-sm text-gray-500 mt-1">Loading report component...</p>
+    <div className="mt-4 flex items-center justify-center py-4">
+      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+  </div>
+);
 
 export default function GroupPage() {
   const { groupId } = useParams();
@@ -177,6 +192,19 @@ export default function GroupPage() {
             <div className="lg:col-span-1 space-y-6">
               <MemberList group={group} />
               <BalanceDisplay group={group} expenses={expenses} />
+              
+              {/* Monthly Report Component */}
+              <Suspense fallback={<ReportLoading />}>
+                <MonthlyReport
+                  groupId={groupId}
+                  groupName={group?.name || 'Group'}
+                  monthKey={selectedMonth}
+                  expenses={expenses}
+                  members={group?.members || {}}
+                  balances={{}} // This will be enhanced later
+                  settlements={[]} // This will be enhanced later
+                />
+              </Suspense>
             </div>
           </div>
 

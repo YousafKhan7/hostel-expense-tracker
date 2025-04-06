@@ -41,7 +41,11 @@
     - [x] Enhanced expense display
     - [x] Share details modal
   - Next Features:
-    - [ ] Monthly report generation
+    - [x] Monthly report generation
+      - [x] PDF report design
+      - [x] Member summaries
+      - [x] Expense details table
+      - [ ] Report storage in Firebase
     - [ ] Email notifications
     - [ ] Monthly totals export
 
@@ -49,7 +53,7 @@
 1. Monthly System Phases:
    - [x] Phase 1: Core date handling and filtering
    - [x] Phase 2: Enhanced UI and user details
-   - [ ] Phase 3: Report generation and export
+   - [x] Phase 3: Report generation and export
    - [ ] Phase 4: Email notifications
 
 2. Additional Features:
@@ -127,4 +131,17 @@
    - Added comprehensive date validation and error handling
    - Enhanced debug logging for date-related issues
    - Ensured consistent date format across all components
-   - Fixed date parsing for different input formats 
+   - Fixed date parsing for different input formats
+
+3. Implemented Monthly Report Generation:
+   - Created MonthlyReport component with HTML-to-PDF approach
+   - Replaced jsPDF with html2pdf.js for more reliable PDF generation
+   - Added report template with styled tables and sections
+   - Implemented member expense summaries and balances
+   - Created chronological expense listing with formatting
+   - Added report service functions for future Firebase storage
+   - Fixed module loading issues:
+     - ✓ Changed from dynamic imports to static imports for html2pdf.js
+     - ✓ Properly installed html2pdf.js dependency
+     - ✓ Implemented lazy loading for the MonthlyReport component
+     - ✓ Added proper error handling for PDF generation 
