@@ -102,11 +102,17 @@ export default function MonthlyReport({
 
       // Configure html2pdf options
       const options = {
-        margin: 10,
+        margin: [5, 5, 5, 5],
         filename: getReportFilename(),
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait',
+          compress: true 
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
 
       // Generate PDF
@@ -177,40 +183,45 @@ export default function MonthlyReport({
 
       {/* Hidden report template that will be converted to PDF */}
       <div className="hidden">
-        <div ref={reportRef} className="p-8 bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
+        <div ref={reportRef} className="p-6 bg-white" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, sans-serif' }}>
           {/* Report Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold">{groupName} - Monthly Expense Report</h1>
-            <p className="text-gray-700 mt-2">Period: {getMonthDisplay()}</p>
-            <p className="text-gray-700">Generated: {new Date().toLocaleDateString()}</p>
-            <p className="text-gray-700">Total Expenses: ${formatAmount(getTotalAmount())}</p>
-            <p className="text-gray-700">Members: {Object.keys(members || {}).length}</p>
+          <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #3366cc', paddingBottom: '10px' }}>
+            <h1 style={{ fontSize: '24px', color: '#3366cc', marginBottom: '6px' }}>{groupName} - Monthly Expense Report</h1>
+            <p style={{ fontSize: '14px', color: '#555' }}>Period: {getMonthDisplay()}</p>
+            <p style={{ fontSize: '14px', color: '#555' }}>Generated: {new Date().toLocaleDateString()}</p>
+            <p style={{ fontSize: '14px', color: '#555' }}>Total Expenses: ${formatAmount(getTotalAmount())}</p>
+            <p style={{ fontSize: '14px', color: '#555' }}>Members: {Object.keys(members || {}).length}</p>
           </div>
 
           {/* Member Summary */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-3">Member Summary</h2>
-            <table className="w-full border-collapse">
+          <div style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+            <h2 style={{ fontSize: '18px', color: '#3366cc', marginBottom: '10px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Member Summary</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
-                <tr className="bg-blue-100">
-                  <th className="border border-gray-300 p-2 text-left">Member</th>
-                  <th className="border border-gray-300 p-2 text-right">Paid</th>
-                  <th className="border border-gray-300 p-2 text-right">Share</th>
-                  <th className="border border-gray-300 p-2 text-right">Balance</th>
-                  <th className="border border-gray-300 p-2 text-center">Status</th>
+                <tr style={{ backgroundColor: '#f0f5ff' }}>
+                  <th style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'left' }}>Member</th>
+                  <th style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>Paid</th>
+                  <th style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>Share</th>
+                  <th style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>Balance</th>
+                  <th style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(getMemberSummaries()).map(([memberId, data], index) => {
                   const balance = data.paid - data.share;
                   const status = getBalanceStatus(balance);
+                  let statusColor;
+                  if (balance > 0) statusColor = '#007700';
+                  else if (balance < 0) statusColor = '#cc0000';
+                  else statusColor = '#666666';
+                  
                   return (
-                    <tr key={memberId} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                      <td className="border border-gray-300 p-2">{data.name}</td>
-                      <td className="border border-gray-300 p-2 text-right">${formatAmount(data.paid)}</td>
-                      <td className="border border-gray-300 p-2 text-right">${formatAmount(data.share)}</td>
-                      <td className="border border-gray-300 p-2 text-right">${formatAmount(balance)}</td>
-                      <td className={`border border-gray-300 p-2 text-center ${status.color}`}>{status.text}</td>
+                    <tr key={memberId} style={{ backgroundColor: index % 2 === 0 ? '#f9f9f9' : '#ffffff' }}>
+                      <td style={{ border: '1px solid #ccc', padding: '6px' }}>{data.name}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>${formatAmount(data.paid)}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>${formatAmount(data.share)}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>${formatAmount(balance)}</td>
+                      <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center', color: statusColor }}>{status.text}</td>
                     </tr>
                   );
                 })}
@@ -218,31 +229,39 @@ export default function MonthlyReport({
             </table>
           </div>
 
+          {/* Page Break */}
+          <div style={{ pageBreakAfter: 'always' }}></div>
+
           {/* Expense Details */}
-          <div>
-            <h2 className="text-xl font-bold mb-3">Expense Details</h2>
-            <table className="w-full border-collapse">
+          <div style={{ pageBreakInside: 'avoid' }}>
+            <h2 style={{ fontSize: '18px', color: '#3366cc', marginBottom: '10px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Expense Details</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
               <thead>
-                <tr className="bg-blue-100">
-                  <th className="border border-gray-300 p-2 text-left">Date</th>
-                  <th className="border border-gray-300 p-2 text-left">Description</th>
-                  <th className="border border-gray-300 p-2 text-left">Paid By</th>
-                  <th className="border border-gray-300 p-2 text-right">Amount</th>
-                  <th className="border border-gray-300 p-2 text-center">Split Type</th>
+                <tr style={{ backgroundColor: '#f0f5ff' }}>
+                  <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left' }}>Date</th>
+                  <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left' }}>Description</th>
+                  <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'left' }}>Paid By</th>
+                  <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>Amount</th>
+                  <th style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>Split Type</th>
                 </tr>
               </thead>
               <tbody>
                 {getSortedExpenses().map((expense, index) => (
-                  <tr key={expense.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="border border-gray-300 p-2">{formatReportDate(expense.expenseDate)}</td>
-                    <td className="border border-gray-300 p-2">{expense.description}</td>
-                    <td className="border border-gray-300 p-2">{members[expense.paidBy]?.name || 'Unknown'}</td>
-                    <td className="border border-gray-300 p-2 text-right">${formatAmount(expense.amount)}</td>
-                    <td className="border border-gray-300 p-2 text-center">{expense.splitType.toUpperCase()}</td>
+                  <tr key={expense.id} style={{ backgroundColor: index % 2 === 0 ? '#f9f9f9' : '#ffffff' }}>
+                    <td style={{ border: '1px solid #ccc', padding: '5px' }}>{formatReportDate(expense.expenseDate)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px' }}>{expense.description}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px' }}>{members[expense.paidBy]?.name || 'Unknown'}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>${formatAmount(expense.amount)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{expense.splitType.toUpperCase()}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          
+          {/* Footer */}
+          <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '10px', fontSize: '10px', color: '#999', textAlign: 'center' }}>
+            <p>Generated by Expense Tracker App</p>
           </div>
         </div>
       </div>
