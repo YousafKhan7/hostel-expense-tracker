@@ -46,7 +46,10 @@
       - [x] Member summaries
       - [x] Expense details table
       - [ ] Report storage in Firebase
-    - [ ] Email notifications
+    - [x] Email notifications
+      - [x] Notification preferences UI
+      - [x] Email service implementation
+      - [ ] Firebase Cloud Functions setup
     - [ ] Monthly totals export
 
 ## Upcoming
@@ -144,4 +147,22 @@
      - ✓ Changed from dynamic imports to static imports for html2pdf.js
      - ✓ Properly installed html2pdf.js dependency
      - ✓ Implemented lazy loading for the MonthlyReport component
-     - ✓ Added proper error handling for PDF generation 
+     - ✓ Added proper error handling for PDF generation
+   - Enhanced PDF formatting:
+     - ✓ Improved table styling for better readability
+     - ✓ Fixed pagination to prevent table breaks
+     - ✓ Added proper margins and spacing
+     - ✓ Implemented more professional color scheme
+
+4. Implemented Email Notification System:
+   - Created email service with functions for different notification types:
+     - New expense notifications
+     - Settlement notifications
+     - Monthly summary notifications
+     - Balance alert notifications
+   - Added notification queue for Firebase processing
+   - Implemented user notification preferences:
+     - Toggle controls for different notification types
+     - Email frequency settings (immediate, daily, weekly)
+   - Created user settings page with notification management
+   - Added route to access settings from dashboard 

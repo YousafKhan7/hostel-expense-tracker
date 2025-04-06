@@ -7,6 +7,7 @@ const SignupPage = lazy(() => import('./pages/SignupPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const GroupPage = lazy(() => import('./pages/GroupPage'))
 const JoinGroup = lazy(() => import('./pages/JoinGroup'))
+const UserSettingsPage = lazy(() => import('./pages/UserSettingsPage'))
 
 // Loading component for Suspense fallback
 const Loading = () => (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/group/:groupId" element={<GroupPage />} />
         <Route path="/join" element={<JoinGroup />} />
+        <Route path="/settings" element={<UserSettingsPage />} />
         <Route path="/" element={<DashboardPage />} />
       </Routes>
     </Suspense>

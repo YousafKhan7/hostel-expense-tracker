@@ -44,7 +44,7 @@
 
 ## Current Focus
 - Implementing Monthly Report Generation ✓
-- Setting up Email Notification System
+- Setting up Email Notification System ✓
 - Adding Expense Categories
 
 ## Next Steps
@@ -53,11 +53,16 @@
 3. [x] Enhance expense display with user details
 4. [x] Add member share details popup
 5. [x] Implement monthly report generation
-   - [x] PDF generation with jsPDF
+   - [x] PDF generation with html2pdf.js
    - [x] Report layout and design
    - [x] Member summary section
    - [x] Detailed expense listing
-6. [ ] Set up email notification system
+   - [x] Enhanced PDF formatting and pagination
+6. [x] Set up email notification system
+   - [x] Email service architecture
+   - [x] User notification preferences
+   - [x] User settings page
+   - [ ] Firebase Cloud Functions implementation
 7. [ ] Add expense categories and tags
 
 ## Technical Debt
