@@ -38,7 +38,7 @@ export default function UserSettingsPage() {
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName || '');
-      setNewEmail(user.email || '');
+      setNewEmail('');
     }
   }, [user]);
 
@@ -140,6 +140,7 @@ export default function UserSettingsPage() {
       
       setAccountSuccess('Email updated successfully!');
       setCurrentPassword('');
+      setNewEmail('');
       
       // Clear success message after 3 seconds
       setTimeout(() => {
@@ -380,7 +381,7 @@ export default function UserSettingsPage() {
                     
                     <div>
                       <label htmlFor="currentPasswordEmail" className="block text-sm font-medium text-gray-700">
-                        Current Password
+                        Current Password <span className="text-red-500">*</span>
                       </label>
                       <div className="relative mt-1">
                         <input
@@ -390,6 +391,7 @@ export default function UserSettingsPage() {
                           onChange={(e) => setCurrentPassword(e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                           placeholder="Enter your current password"
+                          required
                         />
                         <button
                           type="button"
@@ -432,7 +434,7 @@ export default function UserSettingsPage() {
                   <form onSubmit={handleUpdatePassword} className="space-y-3">
                     <div>
                       <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-                        Current Password
+                        Current Password <span className="text-red-500">*</span>
                       </label>
                       <div className="relative mt-1">
                         <input
@@ -442,6 +444,7 @@ export default function UserSettingsPage() {
                           onChange={(e) => setCurrentPassword(e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                           placeholder="Enter your current password"
+                          required
                         />
                         <button
                           type="button"

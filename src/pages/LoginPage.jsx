@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../services/firebaseConfig';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -8,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -30,6 +33,31 @@ export default function LoginPage() {
     setShowPassword(!showPassword);
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address first.');
+      return;
+    }
+
+    try {
+      setError('');
+      setLoading(true);
+      await sendPasswordResetEmail(auth, email);
+      setResetEmailSent(true);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      if (error.code === 'auth/user-not-found') {
+        setError('No account found with this email address.');
+      } else if (error.code === 'auth/invalid-email') {
+        setError('Invalid email format.');
+      } else {
+        setError('Failed to send password reset email. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -42,6 +70,13 @@ export default function LoginPage() {
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
+          {resetEmailSent && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="text-sm text-green-700">
+                Password reset email sent! Please check your inbox.
+              </div>
             </div>
           )}
           <div className="rounded-md shadow-sm -space-y-px">
@@ -80,6 +115,19 @@ export default function LoginPage() {
                     <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
                   </svg>
                 )}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="font-medium text-primary-600 hover:text-primary-500"
+                disabled={loading}
+              >
+                Forgot your password?
               </button>
             </div>
           </div>
