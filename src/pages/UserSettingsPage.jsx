@@ -22,7 +22,8 @@ export default function UserSettingsPage() {
 
   // Account settings state
   const [newEmail, setNewEmail] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
+  const [currentPasswordEmail, setCurrentPasswordEmail] = useState('');
+  const [currentPasswordUpdate, setCurrentPasswordUpdate] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accountLoading, setAccountLoading] = useState(false);
@@ -30,7 +31,8 @@ export default function UserSettingsPage() {
   const [accountSuccess, setAccountSuccess] = useState('');
 
   // Password visibility state
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showCurrentPasswordEmail, setShowCurrentPasswordEmail] = useState(false);
+  const [showCurrentPasswordUpdate, setShowCurrentPasswordUpdate] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -39,6 +41,11 @@ export default function UserSettingsPage() {
     if (user) {
       setDisplayName(user.displayName || '');
       setNewEmail('');
+      // Clear password fields for security
+      setCurrentPasswordEmail('');
+      setCurrentPasswordUpdate('');
+      setNewPassword('');
+      setConfirmPassword('');
     }
   }, [user]);
 
@@ -64,8 +71,11 @@ export default function UserSettingsPage() {
   // Toggle password visibility
   const togglePasswordVisibility = (field) => {
     switch (field) {
-      case 'current':
-        setShowCurrentPassword(!showCurrentPassword);
+      case 'currentEmail':
+        setShowCurrentPasswordEmail(!showCurrentPasswordEmail);
+        break;
+      case 'currentUpdate':
+        setShowCurrentPasswordUpdate(!showCurrentPasswordUpdate);
         break;
       case 'new':
         setShowNewPassword(!showNewPassword);
@@ -115,7 +125,7 @@ export default function UserSettingsPage() {
     setAccountSuccess('');
 
     try {
-      if (!currentPassword) {
+      if (!currentPasswordEmail) {
         setAccountError('Please enter your current password to update email.');
         setAccountLoading(false);
         return;
@@ -128,7 +138,7 @@ export default function UserSettingsPage() {
       }
 
       // Reauthenticate user
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      const credential = EmailAuthProvider.credential(user.email, currentPasswordEmail);
       await reauthenticateWithCredential(user, credential);
       
       // Update email
@@ -139,7 +149,7 @@ export default function UserSettingsPage() {
       await updateDoc(userRef, { email: newEmail });
       
       setAccountSuccess('Email updated successfully!');
-      setCurrentPassword('');
+      setCurrentPasswordEmail('');
       setNewEmail('');
       
       // Clear success message after 3 seconds
@@ -170,7 +180,7 @@ export default function UserSettingsPage() {
     setAccountSuccess('');
 
     try {
-      if (!currentPassword) {
+      if (!currentPasswordUpdate) {
         setAccountError('Please enter your current password.');
         setAccountLoading(false);
         return;
@@ -195,14 +205,14 @@ export default function UserSettingsPage() {
       }
 
       // Reauthenticate user
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      const credential = EmailAuthProvider.credential(user.email, currentPasswordUpdate);
       await reauthenticateWithCredential(user, credential);
       
       // Update password
       await updatePassword(user, newPassword);
       
       setAccountSuccess('Password updated successfully!');
-      setCurrentPassword('');
+      setCurrentPasswordUpdate('');
       setNewPassword('');
       setConfirmPassword('');
       
@@ -385,10 +395,10 @@ export default function UserSettingsPage() {
                       </label>
                       <div className="relative mt-1">
                         <input
-                          type={showCurrentPassword ? "text" : "password"}
+                          type={showCurrentPasswordEmail ? "text" : "password"}
                           id="currentPasswordEmail"
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          value={currentPasswordEmail}
+                          onChange={(e) => setCurrentPasswordEmail(e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                           placeholder="Enter your current password"
                           required
@@ -396,9 +406,9 @@ export default function UserSettingsPage() {
                         <button
                           type="button"
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500 hover:text-gray-700"
-                          onClick={() => togglePasswordVisibility('current')}
+                          onClick={() => togglePasswordVisibility('currentEmail')}
                         >
-                          {showCurrentPassword ? (
+                          {showCurrentPasswordEmail ? (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                               <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
@@ -433,15 +443,15 @@ export default function UserSettingsPage() {
                   <h4 className="text-md font-medium text-gray-900 mb-2">Password</h4>
                   <form onSubmit={handleUpdatePassword} className="space-y-3">
                     <div>
-                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="currentPasswordUpdate" className="block text-sm font-medium text-gray-700">
                         Current Password <span className="text-red-500">*</span>
                       </label>
                       <div className="relative mt-1">
                         <input
-                          type={showCurrentPassword ? "text" : "password"}
-                          id="currentPassword"
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          type={showCurrentPasswordUpdate ? "text" : "password"}
+                          id="currentPasswordUpdate"
+                          value={currentPasswordUpdate}
+                          onChange={(e) => setCurrentPasswordUpdate(e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                           placeholder="Enter your current password"
                           required
@@ -449,9 +459,9 @@ export default function UserSettingsPage() {
                         <button
                           type="button"
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500 hover:text-gray-700"
-                          onClick={() => togglePasswordVisibility('current')}
+                          onClick={() => togglePasswordVisibility('currentUpdate')}
                         >
-                          {showCurrentPassword ? (
+                          {showCurrentPasswordUpdate ? (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                               <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
