@@ -401,6 +401,7 @@ export default function UserSettingsPage() {
                           onChange={(e) => setCurrentPasswordEmail(e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                           placeholder="Enter your current password"
+                          autocomplete="new-password"
                           required
                         />
                         <button
@@ -454,6 +455,7 @@ export default function UserSettingsPage() {
                           onChange={(e) => setCurrentPasswordUpdate(e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                           placeholder="Enter your current password"
+                          autocomplete="new-password"
                           required
                         />
                         <button
