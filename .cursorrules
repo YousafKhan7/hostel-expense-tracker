@@ -1,6 +1,11 @@
 # Cursor Development Rules
 
 ## 1. Input Processing Workflow
+
+### General Principles
+**Important:** Try to fix things at the cause (the root cause) not the symptom.
+Be very detailed with summarization and do not miss out things that are important.
+Don't be just helpful be better.
 1. When user input is received:
    - First, read and understand these rules
    - Check if input aligns with current development phase
@@ -97,4 +102,3 @@ After completing any task:
    - Reference memory-bank files
    - Explain decisions
    - Link to relevant documentation
-   - Provide clear next steps 

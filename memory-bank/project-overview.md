@@ -51,11 +51,13 @@ src/
 ### Phase 1: Expense Splitting (Current)
 - Enhancing expense model
 - Implementing split calculations
-- Adding balance display
+- Adding balance display.
+- **Member Removal**: completed
 
 ### Phase 2: Group Management
 - Member display
 - Invite system
+- Group Categories
 - Permissions management
 
 ### Phase 3: Settlement

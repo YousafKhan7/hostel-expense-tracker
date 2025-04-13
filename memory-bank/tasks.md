@@ -9,7 +9,7 @@
 - [x] Add member role management
 - [x] Allow profile settings and updates
 - [x] Implement account settings (email/password)
-- [ ] Allow removing members from groups
+- [x] Allow removing members from groups
 
 ### Step 2: Expense Management
 - [x] Basic expense creation
@@ -41,6 +41,7 @@
 - [x] Create new groups
 - [x] Join existing groups
 - [x] Group invitation system
+- [ ] add group categories
 - [ ] Group settings
 - [ ] Group categories/tags
 

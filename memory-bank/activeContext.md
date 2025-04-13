@@ -2,12 +2,12 @@
 
 ## Current Phase
 Phase 1 - Core Features & Expense Splitting
-
+  
 ## Current Step
-Step 2.9 - Monthly Report Generation & Notifications
-
+Group Categories
+  
 ## Current Objectives
-1. ✓ Implement monthly report generation
+1. [ ] add group categories
    - ✓ PDF report format
    - ✓ Expense summary
    - ✓ Member contributions
@@ -30,6 +30,8 @@ Step 2.9 - Monthly Report Generation & Notifications
    - ✓ Header with user menu
    - ✓ Logout functionality 
    - ✓ Profile settings
+   - ✓ Allow removing members from groups
+
    - ✓ Account management
 
 ## Active Components
@@ -68,6 +70,9 @@ Step 2.9 - Monthly Report Generation & Notifications
   - ✓ User profile menu
   - ✓ Logout functionality
 
+- MemberList.jsx
+  - Allow removing members
+  
 ## Technical Considerations
 1. ✓ Report Generation
    - ✓ PDF library selection (html2pdf.js)

@@ -3,14 +3,10 @@
 ## Completed Features
 - User Authentication
   - Email/password signup and login
-  - User profiles with names and emails
   - Password reset functionality
+  - User profiles with names and emails
+ - Member Removal
 
-- Group Management
-  - Create new groups
-  - Join existing groups via invite code
-  - Member role management (admin/member)
-  - Member list display with user info
 
 - Expense Management
   - Basic expense creation
@@ -23,6 +19,14 @@
     - Real-time amount validation
     - Remaining amount distribution
     - Per-member amount input
+    - Proper user inclusion in splits
+
+## In Progress
+- Group Management
+  - Create new groups
+  - Join existing groups via invite code
+  - Member role management (admin/member)
+  - Member list display with user info
     - Proper user inclusion in splits
 
 ## In Progress
@@ -56,19 +60,20 @@
       - [x] Category selection in expense form
       - [x] Category filtering and display
     - [ ] Monthly totals export
+- [ ] add group categories
 
-## Upcoming
-1. Monthly System Phases:
-   - [x] Phase 1: Core date handling and filtering
-   - [x] Phase 2: Enhanced UI and user details
-   - [x] Phase 3: Report generation and export
-   - [ ] Phase 4: Email notifications
+## Next
+1.  Monthly System Phases:
+    - [x] Phase 1: Core date handling and filtering
+    - [x] Phase 2: Enhanced UI and user details
+    - [x] Phase 3: Report generation and export
+    - [ ] Phase 4: Email notifications
 
-2. Additional Features:
-   - Expense categories
-   - Expense attachments
-   - Enhanced filtering and sorting
-
+2.  Additional Features:
+    - Expense categories
+    - Expense attachments
+    - Enhanced filtering and sorting
+    - Group Categories
 ## Technical Implementation Decisions
 1. Date Handling:
    - [x] Store all timestamps in UTC
@@ -84,12 +89,13 @@
    - User-configurable preferences
    - Multiple notification types
    - Flexible delivery options
+   
 
 ## Testing Status
-- Manual testing of core features complete
+- Manual testing of core features complete. including group member removal.
 - Need automated tests for:
   - Balance calculation
-  - Split validation
+    - Split validation
   - Custom split functionality
   - Monthly transitions
   - Email notifications
