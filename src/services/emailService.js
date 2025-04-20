@@ -9,26 +9,48 @@ import { userSettingsStructure } from '../utils/ExpenseSchema';
  */
 export const getUserNotificationSettings = async (userId) => {
   try {
+    if (!userId) {
+      console.error('getUserNotificationSettings called with no userId');
+      return null;
+    }
+    
+    console.log(`Getting notification settings for user ${userId}`);
     const userSettingsRef = doc(db, 'userSettings', userId);
     const userSettingsDoc = await getDoc(userSettingsRef);
     
     if (!userSettingsDoc.exists()) {
+      console.log(`No settings found for user ${userId}, creating default settings`);
       // Create default settings if none exist
       const defaultSettings = {
         ...userSettingsStructure,
         userId,
+        notifications: {
+          newExpense: true,
+          settlements: true,
+          monthlySummary: true,
+          balanceAlerts: false
+        },
+        emailFrequency: 'immediate',
         createdAt: new Date(),
         updatedAt: new Date()
       };
       
-      await setDoc(userSettingsRef, defaultSettings);
-      return defaultSettings;
+      try {
+        await setDoc(userSettingsRef, defaultSettings);
+        console.log(`Created default settings for user ${userId}`);
+        return defaultSettings;
+      } catch (setError) {
+        console.error(`Failed to create default settings for user ${userId}:`, setError);
+        return null;
+      }
     }
     
-    return userSettingsDoc.data();
+    const settings = userSettingsDoc.data();
+    console.log(`Retrieved settings for user ${userId}:`, settings.notifications);
+    return settings;
   } catch (error) {
-    console.error('Error getting user notification settings:', error);
-    throw error;
+    console.error(`Error getting user notification settings for ${userId}:`, error);
+    return null;
   }
 };
 
@@ -78,10 +100,17 @@ export const updateUserNotificationSettings = async (userId, settings) => {
  */
 export const queueEmailNotification = async (userId, notificationType, data) => {
   try {
+    console.log(`Queueing ${notificationType} notification for user ${userId}`, data);
+    
     // Check if user wants this notification type
     const userSettings = await getUserNotificationSettings(userId);
     
-    if (!userSettings.notifications[notificationType]) {
+    if (!userSettings) {
+      console.error(`Failed to get user settings for ${userId}`);
+      return null;
+    }
+    
+    if (!userSettings.notifications || !userSettings.notifications[notificationType]) {
       // User has disabled this notification type
       console.log(`User ${userId} has disabled ${notificationType} notifications`);
       return null;
@@ -90,7 +119,7 @@ export const queueEmailNotification = async (userId, notificationType, data) => 
     // Create a new notification document in the notification queue
     const notificationRef = doc(collection(db, 'notificationQueue'));
     
-    await setDoc(notificationRef, {
+    const notificationData = {
       userId,
       notificationType,
       data,
@@ -98,7 +127,10 @@ export const queueEmailNotification = async (userId, notificationType, data) => 
       createdAt: new Date(),
       processedAt: null,
       attempts: 0
-    });
+    };
+    
+    await setDoc(notificationRef, notificationData);
+    console.log(`Notification queued with ID: ${notificationRef.id}`);
     
     return notificationRef.id;
   } catch (error) {

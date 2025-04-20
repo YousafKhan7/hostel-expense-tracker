@@ -49,11 +49,11 @@
       - [x] PDF report design
       - [x] Member summaries
       - [x] Expense details table
-      - [ ] Report storage in Firebase
+      - [x] Report storage in Firebase
     - [x] Email notifications
       - [x] Notification preferences UI
       - [x] Email service implementation
-      - [ ] Firebase Cloud Functions setup
+      - [x] Firebase Cloud Functions setup
     - [x] Expense categories
       - [x] Category management UI
       - [x] Default categories
@@ -61,19 +61,20 @@
       - [x] Category filtering and display
     - [ ] Monthly totals export
 - [ ] add group categories
+- [ ] add expense attachments
 
 ## Next
 1.  Monthly System Phases:
     - [x] Phase 1: Core date handling and filtering
     - [x] Phase 2: Enhanced UI and user details
     - [x] Phase 3: Report generation and export
-    - [ ] Phase 4: Email notifications
+    - [x] Phase 4: Email notifications
 
 2.  Additional Features:
-    - Expense categories
-    - Expense attachments
-    - Enhanced filtering and sorting
-    - Group Categories
+    - [x] Expense categories
+    - [ ] Expense attachments
+    - [ ] Enhanced filtering and sorting
+    - [ ] Group Categories
 ## Technical Implementation Decisions
 1. Date Handling:
    - [x] Store all timestamps in UTC
@@ -86,9 +87,10 @@
    - [x] Continuous balance calculation
 
 3. Notification System:
-   - User-configurable preferences
-   - Multiple notification types
-   - Flexible delivery options
+   - [x] User-configurable preferences
+   - [x] Multiple notification types
+   - [x] Flexible delivery options
+   - [x] Firebase Cloud Functions for processing
    
 
 ## Testing Status
@@ -122,6 +124,8 @@
 - Month transition edge cases need consideration
 - ✓ Fixed: Date parsing issues in expense creation
 - ✓ Fixed: Timezone handling issues in date validation
+- New expense notifications not being sent - email service not called during expense creation
+- Members cannot leave groups - functionality not implemented
 
 ## Next Actions
 1. Create MonthlyData collection structure
@@ -164,6 +168,13 @@
      - ✓ Fixed pagination to prevent table breaks
      - ✓ Added proper margins and spacing
      - ✓ Implemented more professional color scheme
+   - Added Report Storage:
+     - ✓ Integrated Firebase Storage for saving reports
+     - ✓ Created reportService.js with save/retrieve/delete functions
+     - ✓ Updated MonthlyReport component to check for existing reports
+     - ✓ Added UI for viewing saved reports vs. generating new ones
+     - ✓ Implemented appropriate error handling and loading states
+     - ✓ Added reportUrl to monthlyData documents for persistence
 
 4. Implemented Email Notification System:
    - Created email service with functions for different notification types:
@@ -177,6 +188,14 @@
      - Email frequency settings (immediate, daily, weekly)
    - Created user settings page with notification management
    - Added route to access settings from dashboard
+   - Set up Firebase Cloud Functions for email delivery:
+     - ✓ Created functions directory with necessary configuration
+     - ✓ Implemented email sending functionality with Nodemailer
+     - ✓ Added notification queue processing on document create
+     - ✓ Created scheduled functions for daily and weekly digest emails
+     - ✓ Implemented HTML email templates for different notification types
+     - ✓ Added error handling and retry mechanisms
+     - ✓ Integrated with MonthlyReport for report sharing
 
 5. Implemented Expense Categories:
    - Created CategoryManager component for CRUD operations:
@@ -251,3 +270,16 @@
      - Proper reauthentication for sensitive operations
      - Clear error messages for authentication failures
      - Secure handling of user credentials 
+
+9. Group Member Management Fixes:
+   - Fixed admin member removal permissions:
+     - Changed member removal button visibility to allow any admin to remove members
+     - Previously only the group creator could remove members, even if other users had admin roles
+   - Added balance checking for group leaving:
+     - Prevented members from leaving a group with unsettled balances
+     - Added balance verification using BalanceCalculator utility
+     - Implemented clear error message when trying to leave with unsettled balance
+     - Required settling all debts before leaving a group
+   - Enhanced user experience:
+     - Added proper error handling for group exit process
+     - Implemented secure data cleanup when removing/leaving groups 

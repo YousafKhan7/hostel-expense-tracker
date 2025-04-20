@@ -221,7 +221,7 @@ export default function MemberList({ group }) {
                     </div>
                   </Modal>
                 )}
-              {group.createdBy === user.uid && memberId !== group.createdBy && checkIfUserIsAdmin() &&(
+              {checkIfUserIsAdmin() && memberId !== group.createdBy && (
                 <button
                   className={`text-red-600 hover:text-red-800 text-sm ${
                     removing === memberId ? 'opacity-50 cursor-not-allowed' : ''

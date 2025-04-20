@@ -4,21 +4,22 @@
 Phase 1 - Core Features & Expense Splitting
   
 ## Current Step
-Group Categories
+Expense Attachments
   
 ## Current Objectives
-1. [ ] add group categories
+1. [x] add report storage functionality
    - ✓ PDF report format
    - ✓ Expense summary
    - ✓ Member contributions
    - ✓ Balance changes
-   - [ ] Report storage
+   - ✓ Report storage
 
 2. ✓ Set up notification system
    - ✓ Email service integration
    - ✓ User preferences
-   - [ ] Notification templates
-   - [ ] Delivery rules
+   - ✓ Notification templates
+   - ✓ Delivery rules
+   - [ ] Fix missing expense notification calls
 
 3. ✓ Add expense categories
    - ✓ Category management
@@ -31,14 +32,23 @@ Group Categories
    - ✓ Logout functionality 
    - ✓ Profile settings
    - ✓ Allow removing members from groups
-
    - ✓ Account management
+   - ✓ Add group exit functionality for members
+     - ✓ Balance verification before leaving
+     - ✓ Admin removal permissions
+
+5. [ ] Add expense attachments
+   - [ ] File upload component
+   - [ ] Firebase Storage integration
+   - [ ] Image preview
+   - [ ] Attachment display in expense details
 
 ## Active Components
-- ✓ MonthlyReport.jsx (New component)
+- ✓ MonthlyReport.jsx (Updated component)
   - ✓ Report generation
   - ✓ PDF export
-  - [ ] Email delivery
+  - ✓ Firebase Storage integration
+  - ✓ Email delivery
 
 - ✓ NotificationSettings.jsx (New component)
   - ✓ Email preferences
@@ -70,8 +80,8 @@ Group Categories
   - ✓ User profile menu
   - ✓ Logout functionality
 
-- MemberList.jsx
-  - Allow removing members
+- ✓ MemberList.jsx
+  - ✓ Allow removing members
   
 ## Technical Considerations
 1. ✓ Report Generation
@@ -79,19 +89,26 @@ Group Categories
    - ✓ Report template design
    - ✓ Performance optimization
    - ✓ Data aggregation
+   - ✓ Firebase Storage integration
 
-2. Email Integration
+2. ✓ Email Integration
    - ✓ Email service architecture
-   - [ ] Email service provider selection
-   - [ ] Template system
-   - [ ] Delivery tracking
-   - [ ] Error handling
+   - ✓ Email service provider selection (nodemailer)
+   - ✓ Template system
+   - ✓ Delivery tracking
+   - ✓ Error handling
 
 3. ✓ Category System
    - ✓ Data structure (Categories collection)
    - ✓ UI/UX design (color-coded, icon-based)
    - ✓ Default categories for new groups
    - ✓ Integration with expense creation
+
+4. [] Expense Attachments
+   - [] Firebase Storage integration
+   - [] File type validation
+   - [] Size limits
+   - [] Security rules
 
 ## Implementation Phases
 1. Phase 1: Core Monthly System
@@ -107,17 +124,19 @@ Group Categories
 3. Phase 3: Reporting
    - Report generation ✓
    - PDF export ✓
-   - Email delivery
+   - Report storage ✓
+   - Email delivery ✓
 
 4. Phase 4: Notifications
    - ✓ User preferences
    - ✓ Email integration
-   - [ ] Delivery rules
+   - ✓ Delivery rules
 
 ## Dependencies
-- Email service integration (Firebase Cloud Functions)
+- ✓ Email service integration (Firebase Cloud Functions)
 - ✓ PDF generation library (html2pdf.js)
 - ✓ Date handling library
+- ✓ Firebase Storage for reports
 
 ## Notes
 - Start with local timezone display ✓
@@ -129,86 +148,25 @@ Group Categories
 - PDF report generation implemented ✓
 - Email notification system implemented ✓
 - Expense categories implemented ✓
-- Next: focus on Firebase Cloud Functions setup for email delivery
+- Report storage in Firebase implemented ✓
+- Firebase Cloud Functions for email notifications implemented ✓
+- Next: focus on expense attachments functionality
 
 ## Questions to Address
 1. ✓ Which PDF library to use? (html2pdf.js)
-2. How to handle large reports?
-3. What email service to integrate?
-4. How to handle timezone differences in monthly transitions? ✓ (Using noon-based dates)
+2. ✓ How to handle large reports? (Firebase Storage)
+3. ✓ What email service to integrate? (Nodemailer with Firebase Functions)
+4. ✓ How to handle timezone differences in monthly transitions? (Using noon-based dates)
 5. ✓ What default categories to provide? (Created a set of 10 common categories)
+6. What file types should be allowed for expense attachments?
+7. What should be the maximum file size for attachments?
 
 ## Next Steps
 1. ✓ Research and select PDF library
 2. ✓ Design report templates
-3. Set up email service integration
-4. Create notification preferences UI
-5. Implement category system
-
-## Active Components
-- ExpenseCalendar.jsx (New component)
-  - Month selection
-  - Expense filtering
-  - Activity summary
-
-- ExpenseList.jsx (Updates)
-  - Date-based grouping
-  - Enhanced user details
-  - Share details popup
-
-- UserSettings.jsx (New component)
-  - Notification preferences
-  - Email frequency
-  - Display settings
-
-## Technical Considerations
-1. Data Structure Updates
-   - Add MonthlyData collection
-   - Update Expense schema
-   - Add UserSettings collection
-   - Implement proper indexing
-
-2. UI/UX Requirements
-   - Clear date navigation
-   - Visible total balances
-   - Monthly activity summary
-   - Intuitive filtering
-
-3. Performance Optimization
-   - Query optimization
-   - Balance caching
-   - Report pre-generation
-   - Batch updates
-
-## Implementation Phases
-1. Phase 1: Core Monthly System
-   - Date handling
-   - Basic filtering
-   - Monthly grouping
-
-2. Phase 2: Enhanced Display
-   - User details
-   - Share popups
-   - Activity summaries
-
-3. Phase 3: Reporting
-   - Report generation
-   - PDF export
-   - Email delivery
-
-4. Phase 4: Notifications
-   - User preferences
-   - Email integration
-   - Delivery rules
-
-## Dependencies
-- Email service integration
-- PDF generation library
-- Date handling library
-
-## Notes
-- Consider email delivery reliability
-- Plan for scalable report generation
-- Consider data archival strategy
-- Ensure mobile-responsive calendar
-- Consider offline support for reports 
+3. ✓ Set up email service integration
+4. ✓ Create notification preferences UI
+5. ✓ Implement category system
+6. ✓ Implement report storage in Firebase
+7. ✓ Set up Firebase Cloud Functions for email delivery
+8. [ ] Implement expense attachments feature 

@@ -1,6 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import { getMonthBoundaries, formatAmount } from '../../utils/ExpenseSchema';
+import { saveReportToStorage, getReportDownloadUrl } from '../../services/reportService';
+import { getMonthlyData } from '../../services/firestoreService';
 
 /**
  * Component for generating and downloading monthly expense reports
@@ -16,7 +18,38 @@ export default function MonthlyReport({
 }) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [savedReportUrl, setSavedReportUrl] = useState(null);
+  const [checkingStorage, setCheckingStorage] = useState(true);
   const reportRef = useRef(null);
+
+  // Check if a report already exists in storage
+  useEffect(() => {
+    const checkStoredReport = async () => {
+      try {
+        setCheckingStorage(true);
+        // Try to get monthly data to check if report exists
+        const monthlyData = await getMonthlyData(groupId, monthKey);
+        
+        if (monthlyData.reportGenerated && monthlyData.reportUrl) {
+          setSavedReportUrl(monthlyData.reportUrl);
+        } else {
+          // Double-check in storage directly
+          const url = await getReportDownloadUrl(groupId, monthKey);
+          if (url) {
+            setSavedReportUrl(url);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking for stored report:', error);
+      } finally {
+        setCheckingStorage(false);
+      }
+    };
+
+    if (groupId && monthKey) {
+      checkStoredReport();
+    }
+  }, [groupId, monthKey]);
 
   // Format the month for display
   const getMonthDisplay = () => {
@@ -89,7 +122,7 @@ export default function MonthlyReport({
   };
 
   // Generate and download the PDF report
-  const generateReport = async () => {
+  const generateReport = async (saveToStorage = false) => {
     try {
       setGenerating(true);
       setError('');
@@ -116,7 +149,20 @@ export default function MonthlyReport({
       };
 
       // Generate PDF
-      await html2pdf().from(element).set(options).save();
+      if (saveToStorage) {
+        // Generate PDF blob for storage
+        const pdfBlob = await html2pdf().from(element).set(options).output('blob');
+        
+        // Save to Firebase Storage
+        const downloadUrl = await saveReportToStorage(groupId, monthKey, pdfBlob);
+        setSavedReportUrl(downloadUrl);
+        
+        // Also save locally
+        html2pdf().from(element).set(options).save();
+      } else {
+        // Just download locally
+        await html2pdf().from(element).set(options).save();
+      }
       
       setGenerating(false);
     } catch (err) {
@@ -147,6 +193,18 @@ export default function MonthlyReport({
     return { text: 'Settled', color: 'text-gray-600' };
   };
 
+  if (checkingStorage) {
+    return (
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-lg font-medium text-gray-900">Monthly Report</h3>
+        <p className="text-sm text-gray-500 mt-1">Checking for saved reports...</p>
+        <div className="flex justify-center mt-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <h3 className="text-lg font-medium text-gray-900">Monthly Report</h3>
@@ -160,18 +218,62 @@ export default function MonthlyReport({
         </div>
       )}
       
-      <div className="mt-4">
-        <button
-          onClick={generateReport}
-          disabled={generating || expenses.length === 0}
-          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-          ${generating || expenses.length === 0
-            ? 'bg-indigo-300 cursor-not-allowed' 
-            : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
-        >
-          {generating ? 'Generating...' : expenses.length === 0 ? 'No Expenses to Report' : 'Generate PDF Report'}
-        </button>
-      </div>
+      {savedReportUrl ? (
+        <div className="mt-4 space-y-3">
+          <p className="text-sm text-green-600">A report for this month has already been generated!</p>
+          
+          <div className="flex space-x-2">
+            <a 
+              href={savedReportUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex-grow py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center"
+            >
+              View Saved Report
+            </a>
+            <button
+              onClick={() => generateReport(false)}
+              disabled={generating || expenses.length === 0}
+              className={`py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 
+              ${generating ? 'bg-gray-200 cursor-not-allowed' : 'bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
+            >
+              Download Again
+            </button>
+          </div>
+          
+          <button
+            onClick={() => generateReport(true)}
+            disabled={generating}
+            className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Regenerate & Save
+          </button>
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          <button
+            onClick={() => generateReport(false)}
+            disabled={generating || expenses.length === 0}
+            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+            ${generating || expenses.length === 0
+              ? 'bg-indigo-300 cursor-not-allowed' 
+              : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
+          >
+            {generating ? 'Generating...' : expenses.length === 0 ? 'No Expenses to Report' : 'Download PDF Report'}
+          </button>
+          
+          <button
+            onClick={() => generateReport(true)}
+            disabled={generating || expenses.length === 0}
+            className={`w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium 
+            ${generating || expenses.length === 0
+              ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+              : 'text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
+          >
+            {generating ? 'Generating...' : 'Generate & Save to Cloud'}
+          </button>
+        </div>
+      )}
       
       <div className="mt-2 text-xs text-gray-500">
         {expenses.length > 0 ? (

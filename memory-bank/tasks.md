@@ -10,6 +10,7 @@
 - [x] Allow profile settings and updates
 - [x] Implement account settings (email/password)
 - [x] Allow removing members from groups
+- [x] Allow members to leave groups
 
 ### Step 2: Expense Management
 - [x] Basic expense creation
@@ -26,8 +27,8 @@
     - [x] PDF report creation
     - [x] Member summary
     - [x] Expense details
-    - [ ] Report storage
-  - [ ] Monthly email notifications
+    - [x] Report storage
+  - [x] Monthly email notifications
   - [x] Zero balance start for new months
   - [x] Robust date handling and timezone fixes
 - [x] Expense UI Improvements
@@ -48,7 +49,9 @@
 ## Current Focus
 - Implementing Monthly Report Generation ✓
 - Setting up Email Notification System ✓
-- Adding Expense Categories
+- Adding Expense Categories ✓
+- Storing Reports in Firebase Storage ✓
+- Firebase Cloud Functions for Email Notifications ✓
 
 ## Next Steps
 1. [x] Implement monthly calendar view
@@ -61,18 +64,21 @@
    - [x] Member summary section
    - [x] Detailed expense listing
    - [x] Enhanced PDF formatting and pagination
+   - [x] Report storage in Firebase Storage
 6. [x] Set up email notification system
    - [x] Email service architecture
    - [x] User notification preferences
    - [x] User settings page
-   - [ ] Firebase Cloud Functions implementation
-7. [ ] Add expense categories and tags
+   - [x] Firebase Cloud Functions implementation
+7. [ ] Add expense attachments
+8. [ ] Implement group categories
 
 ## Technical Debt
 - Add error boundaries for component failures
 - Implement proper loading states
 - Add comprehensive input validation
 - Optimize database queries
+- Fix missing expense notifications
 - Add automated tests for:
   - Monthly calculations
   - Date handling ✓
@@ -94,7 +100,7 @@
 - [x] Implement expense calculation logic
 - [x] Add PDF export functionality
 - [x] Design printer-friendly report
-- [ ] Implement report saving to Firebase storage
+- [x] Implement report saving to Firebase storage
 
 #### Expense Categories
 - [x] Design category data structure
@@ -110,8 +116,8 @@
 - [x] Set up email service
 - [x] Create notification options in user settings
 - [x] Design email templates
-- [ ] Implement scheduled notifications
-- [ ] Add immediate notifications for important events
+- [x] Implement scheduled notifications
+- [x] Add immediate notifications for important events
 
 #### User Profile Management
 - [x] Add user settings page

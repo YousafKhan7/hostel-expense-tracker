@@ -7,7 +7,19 @@
 *   **Who can remove members?**
     *   Only group admins and the group creator are authorized to remove members from a group.
     *   Regular members do not have the permission to remove other members.
-    *   No user can remove them self from the group.
+    *   ~~No user can remove them self from the group.~~
+
+### Member Self-Removal
+
+*   **Member Exit Option:**
+    *   All members should have the ability to leave a group voluntarily.
+    *   This option should be clearly accessible from the group page.
+    *   The process for leaving a group should be similar to being removed: related expenses and data will be handled the same way.
+    *   Group creators cannot leave their own groups - they must transfer ownership or delete the group.
+    *   **Balance Requirements:**
+        *   Members must settle all balances before leaving a group.
+        *   The system will check if the member has any unsettled balances (positive or negative).
+        *   Clear error messages will explain why a member cannot leave if they have unsettled balances.
 
 ### Confirmation Modal
 

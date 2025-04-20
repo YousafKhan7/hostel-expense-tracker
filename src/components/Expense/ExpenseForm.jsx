@@ -4,6 +4,7 @@ import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../services/firebaseConfig';
 import { validateExpense, getMonthKey } from '../../utils/ExpenseSchema';
 import { updateMonthlyData, getMonthlyData } from '../../services/firestoreService';
+import { sendNewExpenseNotification } from '../../services/emailService';
 import SplitTypeSelector from './SplitTypeSelector';
 import CustomSplitInput from './CustomSplitInput';
 import CategorySelector from '../Category/CategorySelector';
@@ -178,6 +179,21 @@ export default function ExpenseForm({ groupId, onSuccess }) {
         memberBalances: newBalances,
         lastExpenseId: expenseRef.id
       });
+
+      // Send notifications to members
+      try {
+        // Create a complete expense object including ID
+        const completeExpenseData = {
+          ...expenseData,
+          id: expenseRef.id
+        };
+        
+        // Send notifications to all members involved in the split except the creator
+        await sendNewExpenseNotification(groupId, completeExpenseData, selectedMembers);
+      } catch (notificationError) {
+        console.error('Error sending expense notifications:', notificationError);
+        // Don't fail the expense creation if notifications fail
+      }
 
       // Clear form
       setDescription('');

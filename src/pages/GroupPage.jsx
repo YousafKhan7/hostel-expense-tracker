@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, doc, getDoc, addDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebaseConfig';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Common/Modal';
@@ -11,7 +11,7 @@ import ExpenseList from '../components/Expense/ExpenseList';
 import ExpenseCalendar from '../components/Expense/ExpenseCalendar';
 import CategoryManager from '../components/Category/CategoryManager';
 import { getMonthKey, getMonthBoundaries } from '../utils/ExpenseSchema';
-import { lazy, Suspense } from 'react';
+import { BalanceCalculator } from '../utils/BalanceCalculator';
 
 // Lazy load the MonthlyReport component
 const MonthlyReport = lazy(() => import('../components/Report/MonthlyReport'));
@@ -34,6 +34,7 @@ export default function GroupPage() {
   const [loading, setLoading] = useState(true);
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(getMonthKey(new Date()));
   const [activeTab, setActiveTab] = useState('expenses');
@@ -47,6 +48,8 @@ export default function GroupPage() {
   const [error, setError] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [leavingGroup, setLeavingGroup] = useState(false);
+  const [leaveError, setLeaveError] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -129,6 +132,71 @@ export default function GroupPage() {
     }
   };
 
+  // Handle leaving the group
+  const handleLeaveGroup = async () => {
+    if (!group || leavingGroup || group.createdBy === user.uid) return;
+
+    try {
+      setLeavingGroup(true);
+      setLeaveError('');
+
+      // Check if the user has unsettled balances
+      const hasUnsettledBalance = BalanceCalculator.hasMemberUnsettledBalance(expenses, group.members, user.uid);
+      
+      if (hasUnsettledBalance) {
+        setLeaveError("You can't leave the group while you have unsettled balances. Please settle all balances first.");
+        return;
+      }
+
+      // Delete all expenses related to the user
+      const expensesQuery = query(collection(db, 'expenses'), where('groupId', '==', groupId), where('paidBy', '==', user.uid));
+      const expensesSnapshot = await getDocs(expensesQuery);
+      const expensesToDelete = expensesSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+
+      for (const expenseToDelete of expensesToDelete) {
+        await deleteDoc(doc(db, 'expenses', expenseToDelete.id));
+      }
+
+      // Delete all expenses shares related to the user
+      const expensesSharesQuery = query(collection(db, 'expenses'), where('groupId', '==', groupId), where('splitAmong', 'array-contains', user.uid));
+      const expensesSharesSnapshot = await getDocs(expensesSharesQuery);
+      const expensesSharesToDelete = expensesSharesSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+
+      for (const expenseShareToDelete of expensesSharesToDelete) {
+        // Remove user from splitAmong
+        const updatedSplitAmong = expenseShareToDelete.data.splitAmong.filter(id => id !== user.uid);
+
+        // Remove the share object from shares
+        const updatedShares = expenseShareToDelete.data.shares.filter(share => share.memberId !== user.uid);
+
+        // Update the expense document
+        await updateDoc(doc(db, 'expenses', expenseShareToDelete.id), {
+          splitAmong: updatedSplitAmong,
+          shares: updatedShares,
+        });
+      }
+
+      // Create a new members object without the current user
+      const updatedMembers = { ...group.members };
+      delete updatedMembers[user.uid];
+
+      // Update the group document and memberIds
+      await updateDoc(doc(db, 'groups', groupId), {
+        members: updatedMembers,
+        memberIds: Object.keys(updatedMembers),
+      });
+
+      // Close the modal and navigate to dashboard
+      setIsLeaveModalOpen(false);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      setLeaveError('Failed to leave group: ' + error.message);
+    } finally {
+      setLeavingGroup(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -159,6 +227,15 @@ export default function GroupPage() {
               </div>
             </div>
             <div className="flex space-x-4">
+              {/* Only show Leave Group button if the user is not the creator */}
+              {group?.createdBy !== user.uid && (
+                <button
+                  onClick={() => setIsLeaveModalOpen(true)}
+                  className="btn btn-outline-red"
+                >
+                  Leave Group
+                </button>
+              )}
               <button
                 onClick={() => setIsInviteModalOpen(true)}
                 className="btn btn-secondary"
@@ -309,6 +386,51 @@ export default function GroupPage() {
               <p className="text-xs text-gray-500">
                 Others can join by going to the dashboard and clicking "Join Group".
               </p>
+            </div>
+          </Modal>
+
+          {/* Leave Group Confirmation Modal */}
+          <Modal
+            isOpen={isLeaveModalOpen}
+            onClose={() => {
+              setIsLeaveModalOpen(false);
+              setLeaveError('');
+            }}
+            title="Leave Group"
+          >
+            <div className="space-y-4">
+              {leaveError && (
+                <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
+                  {leaveError}
+                </div>
+              )}
+              <p className="text-gray-700">
+                Are you sure you want to leave this group? This action cannot be undone.
+              </p>
+              <p className="text-sm text-gray-500">
+                All your expenses in this group will be deleted, and your shares in other expenses will be removed.
+              </p>
+              
+              <div className="mt-4 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLeaveModalOpen(false);
+                    setLeaveError('');
+                  }}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLeaveGroup}
+                  disabled={leavingGroup}
+                  className="btn btn-red"
+                >
+                  {leavingGroup ? 'Leaving...' : 'Leave Group'}
+                </button>
+              </div>
             </div>
           </Modal>
         </div>

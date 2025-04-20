@@ -115,6 +115,25 @@ export class BalanceCalculator {
   }
 
   /**
+   * Check if a specific member has any unsettled balances
+   * @param {Array} expenses - Array of expense objects
+   * @param {Object} members - Object of group members
+   * @param {string} memberId - ID of the member to check
+   * @returns {boolean} True if the member has unsettled balances, false otherwise
+   */
+  static hasMemberUnsettledBalance(expenses = [], members = {}, memberId) {
+    if (!memberId || !expenses || !members) {
+      return false;
+    }
+
+    const result = this.calculateBalances(expenses, members);
+    const memberBalance = result.individualBalances[memberId];
+    
+    // Consider a balance unsettled if it's more than 1 cent (handles floating point issues)
+    return memberBalance && Math.abs(memberBalance) > 0.01;
+  }
+
+  /**
    * Create a summary of the balance situation
    * @param {Object} balances - Individual member balances
    * @returns {Object} Summary information
