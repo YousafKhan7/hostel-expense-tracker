@@ -1,25 +1,24 @@
 # Development Progress
 
-## Completed Features
-- User Authentication
-  - Email/password signup and login
-  - Password reset functionality
-  - User profiles with names and emails
- - Member Removal
+## Current Focus
+- Balance Management System Implementation
+  - Admin balance control
+  - Member removal enhancement
+  - Leave group functionality
+  - Balance adjustment tracking
 
+## In Progress
+- Member Management Enhancement
+  - [ ] Member removal UI
+  - [ ] Leave group functionality
+  - [ ] Balance verification
+  - [ ] Data cleanup process
 
-- Expense Management
-  - Basic expense creation
-  - Split member selection
-  - Split type options (Equal/Custom)
-  - Split amount validation
-  - Balance calculation
-  - Balance display with settlements
-  - Custom split implementation with:
-    - Real-time amount validation
-    - Remaining amount distribution
-    - Per-member amount input
-    - Proper user inclusion in splits
+- Admin Balance Controls
+  - [ ] Balance adjustment interface
+  - [ ] Comment system
+  - [ ] Settlement controls
+  - [ ] History tracking
 
 ## In Progress
 - Group Management
@@ -128,12 +127,16 @@
 - Members cannot leave groups - functionality not implemented
 
 ## Next Actions
-1. Create MonthlyData collection structure
-2. Update expense schema with proper date fields ✓
-3. Implement basic month-based filtering
-4. Enhance expense display with user details
-5. Add share details modal
-6. Set up email notification foundation
+1. Update MemberList component with removal controls
+2. Create BalanceAdjustment component
+3. Implement adjustment history tracking
+4. Add admin settlement controls
+5. Create MonthlyData collection structure
+6. Update expense schema with proper date fields ✓
+7. Implement basic month-based filtering
+8. Enhance expense display with user details
+9. Add share details modal
+10. Set up email notification foundation
 
 ## Recent Updates
 1. Fixed date handling issues in expense creation:

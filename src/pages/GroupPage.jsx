@@ -1,6 +1,6 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, getDocs, runTransaction, serverTimestamp, deleteField } from 'firebase/firestore';
 import { db } from '../services/firebaseConfig';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Common/Modal';
@@ -12,6 +12,8 @@ import ExpenseCalendar from '../components/Expense/ExpenseCalendar';
 import CategoryManager from '../components/Category/CategoryManager';
 import { getMonthKey, getMonthBoundaries } from '../utils/ExpenseSchema';
 import { BalanceCalculator } from '../utils/BalanceCalculator';
+import AdjustmentHistory from '../components/Balance/AdjustmentHistory';
+import SettlementControls from '../components/Balance/SettlementControls';
 
 // Lazy load the MonthlyReport component
 const MonthlyReport = lazy(() => import('../components/Report/MonthlyReport'));
@@ -50,6 +52,10 @@ export default function GroupPage() {
   const navigate = useNavigate();
   const [leavingGroup, setLeavingGroup] = useState(false);
   const [leaveError, setLeaveError] = useState('');
+  const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
+  const [settlementError, setSettlementError] = useState('');
+  const [processingSettlement, setProcessingSettlement] = useState(false);
+  const [isAdjustmentHistoryOpen, setIsAdjustmentHistoryOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -59,17 +65,44 @@ export default function GroupPage() {
 
     // Fetch group details
     const fetchGroup = async () => {
-      const groupDoc = await getDoc(doc(db, 'groups', groupId));
-      if (groupDoc.exists()) {
-        const groupData = { id: groupDoc.id, ...groupDoc.data() };
-        setGroup(groupData);
-        // Initialize splitAmong with all group members
-        setNewExpense(prev => ({
-          ...prev,
-          splitAmong: groupData.members
-        }));
-      } else {
-        navigate('/dashboard');
+      try {
+        const groupDoc = await getDoc(doc(db, 'groups', groupId));
+        if (groupDoc.exists()) {
+          const groupData = groupDoc.data();
+          
+          // Convert members array to object if it's still in array format
+          if (Array.isArray(groupData.members)) {
+            const membersObj = {};
+            groupData.members.forEach(memberId => {
+              membersObj[memberId] = {
+                role: memberId === groupData.createdBy ? 'admin' : 'member',
+                joinedAt: groupData.createdAt,
+                balance: 0,
+                name: memberId === user.uid ? user.email : memberId // temporary name
+              };
+            });
+
+            // Update the group document with new structure
+            await updateDoc(doc(db, 'groups', groupId), {
+              members: membersObj
+            });
+
+            groupData.members = membersObj;
+          }
+
+          setGroup({ id: groupDoc.id, ...groupData });
+          
+          // Initialize splitAmong with all member IDs
+          setNewExpense(prev => ({
+            ...prev,
+            splitAmong: Object.keys(groupData.members)
+          }));
+        } else {
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error('Error fetching group:', error);
+        setError('Failed to load group data');
       }
     };
 
@@ -141,52 +174,38 @@ export default function GroupPage() {
       setLeaveError('');
 
       // Check if the user has unsettled balances
-      const hasUnsettledBalance = BalanceCalculator.hasMemberUnsettledBalance(expenses, group.members, user.uid);
+      const hasUnsettledBalance = group.members[user.uid]?.balance !== 0;
       
       if (hasUnsettledBalance) {
         setLeaveError("You can't leave the group while you have unsettled balances. Please settle all balances first.");
         return;
       }
 
-      // Delete all expenses related to the user
-      const expensesQuery = query(collection(db, 'expenses'), where('groupId', '==', groupId), where('paidBy', '==', user.uid));
-      const expensesSnapshot = await getDocs(expensesQuery);
-      const expensesToDelete = expensesSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
-
-      for (const expenseToDelete of expensesToDelete) {
-        await deleteDoc(doc(db, 'expenses', expenseToDelete.id));
-      }
-
-      // Delete all expenses shares related to the user
-      const expensesSharesQuery = query(collection(db, 'expenses'), where('groupId', '==', groupId), where('splitAmong', 'array-contains', user.uid));
-      const expensesSharesSnapshot = await getDocs(expensesSharesQuery);
-      const expensesSharesToDelete = expensesSharesSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
-
-      for (const expenseShareToDelete of expensesSharesToDelete) {
-        // Remove user from splitAmong
-        const updatedSplitAmong = expenseShareToDelete.data.splitAmong.filter(id => id !== user.uid);
-
-        // Remove the share object from shares
-        const updatedShares = expenseShareToDelete.data.shares.filter(share => share.memberId !== user.uid);
-
-        // Update the expense document
-        await updateDoc(doc(db, 'expenses', expenseShareToDelete.id), {
-          splitAmong: updatedSplitAmong,
-          shares: updatedShares,
+      await runTransaction(db, async (transaction) => {
+        // Remove member from group
+        const groupRef = doc(db, 'groups', groupId);
+        transaction.update(groupRef, {
+          [`members.${user.uid}`]: deleteField()
         });
-      }
 
-      // Create a new members object without the current user
-      const updatedMembers = { ...group.members };
-      delete updatedMembers[user.uid];
-
-      // Update the group document and memberIds
-      await updateDoc(doc(db, 'groups', groupId), {
-        members: updatedMembers,
-        memberIds: Object.keys(updatedMembers),
+        // Update all related expenses
+        const expensesQuery = query(
+          collection(db, 'expenses'),
+          where('groupId', '==', groupId),
+          where('splitAmong', 'array-contains', user.uid)
+        );
+        
+        const expensesSnapshot = await getDocs(expensesQuery);
+        expensesSnapshot.forEach(doc => {
+          const expenseData = doc.data();
+          const updatedSplitAmong = expenseData.splitAmong.filter(id => id !== user.uid);
+          
+          transaction.update(doc.ref, {
+            splitAmong: updatedSplitAmong
+          });
+        });
       });
 
-      // Close the modal and navigate to dashboard
       setIsLeaveModalOpen(false);
       navigate('/dashboard');
     } catch (error) {
@@ -194,6 +213,106 @@ export default function GroupPage() {
       setLeaveError('Failed to leave group: ' + error.message);
     } finally {
       setLeavingGroup(false);
+    }
+  };
+
+  // Add new function to handle member removal (for admins)
+  const handleRemoveMember = async (memberId) => {
+    if (!group || group.members[user.uid]?.role !== 'admin') return;
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        // Check member balance
+        const memberBalance = group.members[memberId]?.balance || 0;
+        if (memberBalance !== 0) {
+          throw new Error("Can't remove member with unsettled balance");
+        }
+
+        // Remove member from group
+        const groupRef = doc(db, 'groups', groupId);
+        transaction.update(groupRef, {
+          [`members.${memberId}`]: deleteField()
+        });
+
+        // Update related expenses
+        const expensesQuery = query(
+          collection(db, 'expenses'),
+          where('groupId', '==', groupId),
+          where('splitAmong', 'array-contains', memberId)
+        );
+        
+        const expensesSnapshot = await getDocs(expensesQuery);
+        expensesSnapshot.forEach(doc => {
+          const expenseData = doc.data();
+          const updatedSplitAmong = expenseData.splitAmong.filter(id => id !== memberId);
+          
+          transaction.update(doc.ref, {
+            splitAmong: updatedSplitAmong
+          });
+        });
+      });
+    } catch (error) {
+      console.error('Error removing member:', error);
+      throw error;
+    }
+  };
+
+  const handleSettlement = async (memberId, amount, comment) => {
+    if (!group || processingSettlement) return;
+
+    setProcessingSettlement(true);
+    setSettlementError('');
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const memberBalance = group.members[memberId]?.balance || 0;
+
+        if (amount > Math.abs(memberBalance)) {
+          throw new Error("Settlement amount cannot exceed current balance");
+        }
+
+        // Create settlement record
+        const settlementRef = doc(collection(db, 'settlements'));
+        transaction.set(settlementRef, {
+          groupId,
+          memberId,
+          adminId: user.uid,
+          amount: Number(amount),
+          comment,
+          createdAt: serverTimestamp(),
+          balanceBefore: memberBalance
+        });
+
+        // Update member's balance
+        const groupRef = doc(db, 'groups', groupId);
+        const newBalance = memberBalance > 0 
+          ? memberBalance - Number(amount)
+          : memberBalance + Number(amount);
+
+        transaction.update(groupRef, {
+          [`members.${memberId}.balance`]: newBalance,
+          [`members.${memberId}.lastSettlement`]: serverTimestamp()
+        });
+
+        // Create adjustment record
+        const adjustmentRef = doc(collection(db, 'adjustments'));
+        transaction.set(adjustmentRef, {
+          groupId,
+          memberId,
+          adminId: user.uid,
+          amount: Number(amount),
+          type: memberBalance > 0 ? 'DEDUCT' : 'ADD',
+          comment: `Settlement: ${comment}`,
+          createdAt: serverTimestamp(),
+          isSettlement: true
+        });
+      });
+
+      setIsSettlementModalOpen(false);
+    } catch (error) {
+      setSettlementError(error.message);
+    } finally {
+      setProcessingSettlement(false);
     }
   };
 
@@ -248,6 +367,22 @@ export default function GroupPage() {
               >
                 Add Expense
               </button>
+              {group?.members[user.uid]?.role === 'admin' && (
+                <button
+                  onClick={() => setIsSettlementModalOpen(true)}
+                  className="ml-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Record Settlement
+                </button>
+              )}
+              {group?.members[user.uid]?.role === 'admin' && (
+                <button
+                  onClick={() => setIsAdjustmentHistoryOpen(true)}
+                  className="ml-2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  View History
+                </button>
+              )}
             </div>
           </div>
 
@@ -307,7 +442,11 @@ export default function GroupPage() {
 
               {/* Right Column - Members and Balance */}
               <div className="lg:col-span-1 space-y-6">
-                <MemberList group={group} />
+                <MemberList 
+                  group={group}
+                  expenses={expenses}
+                  onRemoveMember={handleRemoveMember}
+                />
                 <BalanceDisplay group={group} expenses={expenses} />
               </div>
             </div>
@@ -433,6 +572,29 @@ export default function GroupPage() {
               </div>
             </div>
           </Modal>
+
+          {isAdjustmentHistoryOpen && (
+            <Modal
+              isOpen={isAdjustmentHistoryOpen}
+              onClose={() => setIsAdjustmentHistoryOpen(false)}
+              title="Adjustment History"
+            >
+              <AdjustmentHistory group={group} />
+            </Modal>
+          )}
+
+          {isSettlementModalOpen && (
+            <Modal
+              isOpen={isSettlementModalOpen}
+              onClose={() => setIsSettlementModalOpen(false)}
+              title="Settlement Controls"
+            >
+              <SettlementControls 
+                group={group} 
+                onClose={() => setIsSettlementModalOpen(false)}
+              />
+            </Modal>
+          )}
         </div>
       </div>
     </div>
